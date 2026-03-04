@@ -111,8 +111,8 @@ export default function Home() {
       <section className="relative z-20 -mt-10 md:-mt-20 max-w-6xl mx-auto px-4">
         <div className="bg-white rounded-[2rem] shadow-2xl p-6 md:p-10 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 border-b-8 border-orange-500">
           {[
-            { label: "ปีแห่งประสบการณ์", val: "15+", color: "text-green-800" },
-            { label: "ฐานกิจกรรมผจญภัย", val: "20+", color: "text-orange-500" },
+            { label: "ปีแห่งประสบการณ์", val: "12+", color: "text-green-800" },
+            { label: "ฐานกิจกรรมผจญภัย", val: "17+", color: "text-orange-500" },
             { label: "ความจุเรือนนอน", val: "600", color: "text-green-800", unit: "คน" },
             { label: "มาตรฐานความปลอดภัย", val: "100%", color: "text-orange-500" }
           ].map((item, i) => (
