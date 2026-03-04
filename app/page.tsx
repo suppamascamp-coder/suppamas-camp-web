@@ -1,11 +1,14 @@
 import React from 'react';
-import { Compass, Flame, Users, CalendarDays, CheckCircle2 } from 'lucide-react';
+import { 
+  Compass, Flame, Users, CheckCircle2, 
+  ShieldCheck, BedDouble, Utensils, Star, Quote 
+} from 'lucide-react';
 import ActivityCard from '../src/components/ActivityCard'; // ดึงชิ้นส่วนการ์ดมาใช้
 
 export default function Home() {
   return (
     <>
-      {/* 1. Hero Section (อันเดิมที่คุณมีอยู่แล้ว) */}
+      {/* 1. Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
@@ -14,51 +17,57 @@ export default function Home() {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-green-950/60 mix-blend-multiply"></div>
+          {/* เพิ่ม Gradient เพื่อไล่สีให้ข้อความเด่นขึ้น */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70"></div>
         </div>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto mt-16">
-          <span className="inline-block py-1 px-3 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-sm font-semibold mb-6 backdrop-blur-sm animate-pulse">
+        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto mt-16 w-full">
+          <span className="inline-block py-1.5 px-4 rounded-full bg-black/40 text-orange-400 border border-orange-500/50 text-sm md:text-base font-semibold mb-6 backdrop-blur-md">
             เปิดรับจองรอบปีการศึกษา {new Date().getFullYear()} แล้ว
           </span>
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-lg leading-tight">
-            สร้างผู้นำ เรียนรู้วิถีธรรมชาติ <br/>
-            <span className="text-orange-400">ณ ค่ายศุภมาศ ราชบุรี</span>
+          
+          {/* ปรับขนาดฟอนต์ให้ Responsive (text-4xl สำหรับมือถือ, text-6xl สำหรับ PC) */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-xl leading-tight">
+            บริการค่ายพักแรม <br className="hidden md:block" /> 
+            ฝึกอบรมลูกเสือครบวงจร <br/>
+            <span className="text-orange-500">ณ ค่ายอนุสรณ์ศุภมาศ ราชบุรี</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-200 mb-10 drop-shadow-md max-w-2xl mx-auto">
+          
+          <p className="text-lg md:text-xl lg:text-2xl text-gray-200 mb-10 drop-shadow-md max-w-3xl mx-auto font-light">
             มาตรฐานความปลอดภัยสูงสุด ฐานกิจกรรมระดับสากล ท่ามกลางบรรยากาศธรรมชาติที่สมบูรณ์แบบ
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-full font-bold text-lg transition-transform transform hover:-translate-y-1 shadow-xl">
+          
+          {/* ปรับปุ่มให้เรียงแนวตั้งบนมือถือ (flex-col) และแนวนอนบน PC (sm:flex-row) */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full px-4 sm:px-0">
+            <button className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-full font-bold text-lg transition-transform transform hover:-translate-y-1 shadow-xl">
               ดูโปรแกรมค่าย
             </button>
-            <button className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-full font-bold text-lg transition-transform transform hover:-translate-y-1">
+            <button className="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/50 text-white px-8 py-4 rounded-full font-bold text-lg transition-transform transform hover:-translate-y-1">
               ชมวิดีโอบรรยากาศ
             </button>
           </div>
         </div>
       </section>
 
-      {/* 2. Trust Bar (แถบสถิติ - ดึงให้ทับรูปด้านบนนิดนึงด้วย -mt-16) */}
-      <section className="relative z-20 -mt-16 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col md:flex-row justify-around items-center gap-8 border-b-4 border-green-800">
+      {/* 2. Trust Bar */}
+      {/* ใช้ Grid แทน Flex เพื่อให้บนมือถือแบ่งเป็น 2x2 คอลัมน์สวยๆ */}
+      <section className="relative z-20 -mt-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 border-b-4 border-orange-500">
           <div className="text-center">
-            <div className="text-4xl font-extrabold text-green-800 mb-1">12+</div>
-            <div className="text-gray-500 font-medium">ปีแห่งประสบการณ์</div>
+            <div className="text-3xl md:text-4xl font-extrabold text-green-800 mb-1">15+</div>
+            <div className="text-sm md:text-base text-gray-500 font-medium">ปีแห่งประสบการณ์</div>
           </div>
-          <div className="hidden md:block w-px h-12 bg-gray-200"></div>
-          <div className="text-center">
-            <div className="text-4xl font-extrabold text-orange-500 mb-1">15+</div>
-            <div className="text-gray-500 font-medium">ฐานกิจกรรมผจญภัย</div>
+          <div className="text-center md:border-l md:border-gray-200">
+            <div className="text-3xl md:text-4xl font-extrabold text-orange-500 mb-1">20+</div>
+            <div className="text-sm md:text-base text-gray-500 font-medium">ฐานกิจกรรมผจญภัย</div>
           </div>
-          <div className="hidden md:block w-px h-12 bg-gray-200"></div>
-          <div className="text-center">
-            <div className="text-4xl font-extrabold text-green-800 mb-1">600 คน</div>
-            <div className="text-gray-500 font-medium">รองรับนักเรียน</div>
+          <div className="text-center border-t pt-6 md:pt-0 md:border-t-0 md:border-l md:border-gray-200">
+            <div className="text-3xl md:text-4xl font-extrabold text-green-800 mb-1">1,000+</div>
+            <div className="text-sm md:text-base text-gray-500 font-medium">รองรับนักเรียน/สัปดาห์</div>
           </div>
-          <div className="hidden md:block w-px h-12 bg-gray-200"></div>
-          <div className="text-center">
-            <div className="text-4xl font-extrabold text-orange-500 mb-1">100%</div>
-            <div className="text-gray-500 font-medium">มาตรฐานความปลอดภัย</div>
+          <div className="text-center border-t pt-6 md:pt-0 md:border-t-0 md:border-l md:border-gray-200">
+            <div className="text-3xl md:text-4xl font-extrabold text-orange-500 mb-1">100%</div>
+            <div className="text-sm md:text-base text-gray-500 font-medium">มาตรฐานความปลอดภัย</div>
           </div>
         </div>
       </section>
@@ -102,8 +111,46 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Packages Section */}
-      <section className="py-24 bg-white" id="โปรแกรม">
+      {/* 4. Facilities Section (สิ่งอำนวยความสะดวก) */}
+      <section className="py-24 bg-white" id="สถานที่">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold text-green-900 mb-4">สิ่งอำนวยความสะดวกครบครัน</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              เราคำนึงถึงความปลอดภัย สุขอนามัย และความสะดวกสบายของนักเรียนและคณะครูเป็นอันดับแรก
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 text-center hover:shadow-lg transition-shadow duration-300">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-700">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">ความปลอดภัยสูงสุด 24 ชม.</h3>
+              <p className="text-gray-600">มีเจ้าหน้าที่รักษาความปลอดภัยตลอดคืน กล้องวงจรปิดรอบค่าย และห้องพยาบาลพร้อมอุปกรณ์ปฐมพยาบาลครบครัน</p>
+            </div>
+            
+            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 text-center hover:shadow-lg transition-shadow duration-300">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 text-orange-500">
+                <BedDouble className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">เรือนนอนกว้างขวาง</h3>
+              <p className="text-gray-600">เรือนนอนแยกสัดส่วนชาย-หญิง อากาศถ่ายเทสะดวก พร้อมพัดลมและเครื่องนอนที่ผ่านการทำความสะอาดอย่างถูกสุขลักษณะ</p>
+            </div>
+            
+            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 text-center hover:shadow-lg transition-shadow duration-300">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600">
+                <Utensils className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">โรงอาหารมาตรฐาน</h3>
+              <p className="text-gray-600">อาหารปรุงสุกใหม่ สะอาด ถูกหลักโภชนาการ พื้นที่กว้างขวางรองรับนักเรียนและคณะครูได้พร้อมกันกว่า 1,000 คน</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Packages Section */}
+      <section className="py-24 bg-gray-50" id="โปรแกรม">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-green-900 mb-4">แพ็กเกจแนะนำ</h2>
@@ -112,7 +159,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Package 1 */}
-            <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 flex flex-col">
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 flex flex-col hover:shadow-lg transition-shadow">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">One Day Trip</h3>
               <p className="text-gray-500 mb-6">กิจกรรมเช้า-เย็นกลับ เน้นฐานผจญภัย</p>
               <ul className="space-y-4 mb-8 flex-1">
@@ -143,7 +190,7 @@ export default function Home() {
             </div>
 
             {/* Package 3 */}
-            <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 flex flex-col">
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 flex flex-col hover:shadow-lg transition-shadow">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">3 วัน 2 คืน</h3>
               <p className="text-gray-500 mb-6">จัดเต็มทุกทักษะ ซึมซับบรรยากาศเต็มรูปแบบ</p>
               <ul className="space-y-4 mb-8 flex-1">
@@ -155,6 +202,75 @@ export default function Home() {
                 ขอใบเสนอราคา
               </button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Testimonials Section (เสียงตอบรับ) */}
+      <section className="py-24 bg-green-950 text-white relative overflow-hidden">
+        {/* Decorative Background Element */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-green-800 rounded-full blur-3xl opacity-30 transform translate-x-1/2 -translate-y-1/2"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">ความไว้วางใจจากโรงเรียนชั้นนำ</h2>
+            <p className="text-green-200 max-w-2xl mx-auto text-lg">
+              ส่วนหนึ่งของความประทับใจจากคณะครูที่เคยพานักเรียนมาเข้าค่ายกับเรา
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { 
+                name: "คุณครูสมชาย (หัวหน้าหมวดกิจกรรม)", 
+                school: "โรงเรียนอนุบาลราชบุรี", 
+                review: "สถานที่กว้างขวาง ปลอดภัยมาก วิทยากรดูแลเด็กๆ ได้ดีเยี่ยม กิจกรรมสนุกและได้ความรู้จริงๆ ปีหน้าจะพาเด็กๆ มาอีกแน่นอนครับ" 
+              },
+              { 
+                name: "ผู้อำนวยการวิยดา", 
+                school: "โรงเรียนดรุณาราชบุรี", 
+                review: "ประทับใจเรื่องความสะอาดของห้องน้ำและโรงอาหารมากค่ะ อาหารอร่อย เด็กๆ ทานกันหมดทุกมื้อ ทีมงานมืออาชีพมากๆ คลายความกังวลของครูไปได้เยอะเลย" 
+              },
+              { 
+                name: "คุณครูเอกพล (ครูพละศึกษา)", 
+                school: "โรงเรียนเบญจมราชูทิศ", 
+                review: "ฐานผจญภัยได้มาตรฐานและมีความปลอดภัยสูงมาก อุปกรณ์เซฟตี้ใหม่และพร้อมใช้งาน เด็กๆ ได้ฝึกความกล้าหาญอย่างเต็มที่ครับ แนะนำเลยครับ" 
+              }
+            ].map((item, idx) => (
+              <div key={idx} className="bg-green-900/60 p-8 rounded-2xl border border-green-800 relative backdrop-blur-sm">
+                <Quote className="absolute top-6 right-6 w-12 h-12 text-green-700/50" />
+                <div className="flex gap-1 mb-6 relative z-10">
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-orange-400 text-orange-400" />)}
+                </div>
+                <p className="text-green-50 mb-8 relative z-10 leading-relaxed italic">
+                  "{item.review}"
+                </p>
+                <div className="border-t border-green-800 pt-4 mt-auto">
+                  <p className="font-bold text-white">{item.name}</p>
+                  <p className="text-green-400 text-sm mt-1">{item.school}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Final Call to Action Section */}
+      <section className="py-20 bg-orange-500">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
+            พร้อมพานักเรียนมาเปิดประสบการณ์<br />ลูกเสือที่สมบูรณ์แบบแล้วหรือยัง?
+          </h2>
+          <p className="text-orange-100 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
+            ตรวจสอบคิวว่างและขอใบเสนอราคาได้ฟรี ทีมงานของเราพร้อมให้คำปรึกษาและจัดแพ็กเกจที่เหมาะสมที่สุดสำหรับโรงเรียนของคุณ
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-white text-orange-600 hover:bg-gray-100 px-10 py-4 rounded-full font-bold text-lg transition-transform transform hover:-translate-y-1 shadow-xl">
+              ติดต่อสอบถาม / จองค่าย
+            </button>
+            <button className="bg-transparent border-2 border-white text-white hover:bg-white/10 px-10 py-4 rounded-full font-bold text-lg transition-colors">
+              ดูแผนที่การเดินทาง
+            </button>
           </div>
         </div>
       </section>
