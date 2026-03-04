@@ -417,14 +417,14 @@ export default function Home() {
               {/* ปุ่มดูแผนที่จุดสังเกต (Graphic Map) */}
               <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-xl flex flex-col md:flex-row items-center gap-6 group hover:border-orange-500 transition-colors">
                 <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border-2 border-orange-500/20 group-hover:border-orange-500 transition-colors">
-                  <img src="/แผนที่ค่าย 2022.jpg" alt="แผนที่จุดสังเกต" className="w-full h-full object-cover" />
+                  <img src="/แผนที่ค่าย 2022.png" alt="แผนที่จุดสังเกต" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 text-center md:text-left">
                   <h4 className="font-bold text-gray-900 text-lg">แผนที่จุดสังเกตสำหรับผู้เดินทาง</h4>
                   <p className="text-gray-500 text-sm italic">รวมแลนด์มาร์คสำคัญและเส้นทางลัดสู่อำเภอโพธาราม</p>
                 </div>
                 <a 
-                  href="/แผนที่ค่าย 2022.jpg" 
+                  href="/แผนที่ค่าย 2022.png" 
                   target="_blank" 
                   className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2"
                 >
