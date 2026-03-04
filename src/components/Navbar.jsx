@@ -21,7 +21,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-2 cursor-pointer">
             <Tent className={`w-8 h-8 ${isScrolled ? 'text-green-800' : 'text-orange-500'}`} />
-            <span className={`font-bold text-xl tracking-tight ${isScrolled ? 'text-green-900' : 'text-white'}`}>อนุสรณ์ศุภมาศ</span>
+            <span className={`font-bold text-xl tracking-tight ${isScrolled ? 'text-green-900' : 'text-white'}`}>ค่ายลูกเสืออนุสรณ์ศุภมาศ</span>
           </Link>
           <nav className="hidden md:flex space-x-8">
             {['กิจกรรม', 'สถานที่', 'โปรแกรม', 'ติดต่อเรา'].map((item) => (

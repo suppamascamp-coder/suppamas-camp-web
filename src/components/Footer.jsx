@@ -8,7 +8,7 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-2 mb-6">
             <Tent className="w-8 h-8 text-orange-500" />
-            <span className="font-bold text-2xl text-white">ค่ายศุภมาศ</span>
+            <span className="font-bold text-2xl text-white">ค่ายลูกเสืออนุสรณ์ศุภมาศ</span>
           </div>
           <p className="mb-6 leading-relaxed">ศูนย์ฝึกอบรมและค่ายลูกเสือที่ได้มาตรฐานที่สุดในจังหวัดราชบุรี มุ่งมั่นสร้างเยาวชนให้มีระเบียบวินัยและทักษะชีวิต ท่ามกลางธรรมชาติที่สมบูรณ์</p>
         </div>
@@ -16,7 +16,7 @@ export default function Footer() {
           <h4 className="text-white font-bold mb-6 text-lg">ติดต่อเรา</h4>
           <ul className="space-y-4">
             <li className="flex items-start gap-3"><MapPin className="w-6 h-6 text-orange-500 flex-shrink-0" /><span>ต.หนองกวาง อ.โพธาราม<br/>จ.ราชบุรี 70120</span></li>
-            <li className="flex items-center gap-3"><Phone className="w-5 h-5 text-orange-500 flex-shrink-0" /><span>081-234-5678</span></li>
+            <li className="flex items-center gap-3"><Phone className="w-5 h-5 text-orange-500 flex-shrink-0" /><span>086-551-5110</span></li>
           </ul>
         </div>
         <div>
