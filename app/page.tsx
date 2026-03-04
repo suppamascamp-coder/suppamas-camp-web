@@ -30,7 +30,7 @@ export default function Home() {
 
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto w-full">
           <span className="inline-block py-1 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-4 backdrop-blur-sm animate-pulse uppercase tracking-widest">
-            Welcome to Suppamas Camp
+            Welcome to Suppamas Camp || เปิดให้จองแล้ววันนี้
           </span>
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl leading-tight">
             ค่ายลูกเสือ <br className="hidden md:block" /> 
@@ -98,15 +98,15 @@ export default function Home() {
                 <span className="text-orange-500 font-extrabold">อนุสรณ์ศุภมาศ ราชบุรี</span>
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed">
-                ค่ายอนุสรณ์ศุภมาศ ก่อตั้งขึ้นบนพื้นที่กว่า 100 ไร่ ในอำเภอโพธาราม จังหวัดราชบุรี ด้วยเจตนารมณ์ที่ต้องการสร้างพื้นที่แห่งการเรียนรู้ที่สมบูรณ์แบบสำหรับเยาวชนไทย 
-                เราไม่เพียงแต่จัดสถานที่พักแรม แต่เรามุ่งเน้นการจัดกิจกรรมที่ปลูกฝังทักษะชีวิต ความเป็นผู้นำ และความสามัคคีผ่านกระบวนการทางลูกเสือที่เป็นสากล
+                ค่ายอนุสรณ์ศุภมาศ เป็นค่ายในเครือโรงเรียนอนุสรณ์ศุภมาศ สมุทรสาคร ก่อตั้งขึ้นบนพื้นที่กว่า 50 ไร่ ในอำเภอโพธาราม จังหวัดราชบุรี ด้วยเจตนารมณ์ที่ต้องการสร้างพื้นที่แห่งการเรียนรู้ที่สมบูรณ์แบบสำหรับเยาวชนไทย 
+                เราไม่เพียงแต่จัดสถานที่พักแรม แต่เรามุ่งเน้นการจัดกิจกรรมที่ปลูกฝังทักษะชีวิต ความเป็นผู้นำ และความสามัคคีผ่านกระบวนการทางลูกเสือที่เป็นสากล ด้วยสโลแกน "กินอิ่ม นอนหลับ พักสบาย คลายอารมณ์"
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700">
                       <Award className="w-5 h-5" />
                    </div>
-                   <span className="font-bold text-gray-700 text-sm">วิทยากรผู้เชี่ยวชาญ</span>
+                   <span className="font-bold text-gray-700 text-sm">วิทยากรผู้เชี่ยวชาญทุก Generation</span>
                 </div>
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
@@ -131,10 +131,10 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { name: "ผู้อำนวยการค่าย", pos: "ผู้บริหารค่ายอนุสรณ์ศุภมาศ", img: "https://ui-avatars.com/api/?name=Director&background=064e3b&color=fff&size=512" },
-              { name: "หัวหน้าทีมวิทยากร", pos: "ฝ่ายหลักสูตรและการฝึกอบรม", img: "https://ui-avatars.com/api/?name=Instructor&background=ea580c&color=fff&size=512" },
-              { name: "ฝ่ายกิจกรรมและนันทนาการ", pos: "ดูแลกิจกรรมฐานและนันทนาการ", img: "https://ui-avatars.com/api/?name=Activity&background=1d4ed8&color=fff&size=512" },
-              { name: "ฝ่ายความปลอดภัยและกู้ชีพ", pos: "เจ้าหน้าที่พยาบาลและกู้ภัย", img: "https://ui-avatars.com/api/?name=Safety&background=b91c1c&color=fff&size=512" }
+              { name: "นายมนตรี คงสกุลถาวร", pos: "ผู้อำนวยการค่ายอนุสรณ์ศุภมาศ", img: "https://ui-avatars.com/api/?name=Director&background=064e3b&color=fff&size=512" },
+              { name: "นายเฉลิมชัย คงสกุลถาวร", pos: "ฝ่ายหลักสูตรและการฝึกอบรม", img: "https://ui-avatars.com/api/?name=Instructor&background=ea580c&color=fff&size=512" },
+              { name: "นายสหัส บ่อขุนทด", pos: "ดูแลกิจกรรมฐานและนันทนาการ", img: "https://ui-avatars.com/api/?name=Activity&background=1d4ed8&color=fff&size=512" },
+              { name: "นายสุรินทร์ ครบเบญจะ", pos: "เจ้าหน้าที่พยาบาลและกู้ภัย", img: "https://ui-avatars.com/api/?name=Safety&background=b91c1c&color=fff&size=512" }
             ].map((person, idx) => (
               <div key={idx} className="group bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 text-center">
                 <div className="relative h-64 overflow-hidden bg-gray-200">
@@ -158,7 +158,7 @@ export default function Home() {
                    <Users className="w-8 h-8 text-orange-400" />
                 </div>
                 <div>
-                   <h4 className="text-2xl font-bold">ทีมงานวิทยากรและสตาฟกว่า 50 ท่าน</h4>
+                   <h4 className="text-2xl font-bold">ทีมงานวิทยากรและสตาฟกว่า 30 ท่าน</h4>
                    <p className="text-green-200 font-light">พร้อมดูแลนักเรียนทุกคนอย่างใกล้ชิด ตลอด 24 ชั่วโมง</p>
                 </div>
              </div>
@@ -351,7 +351,7 @@ export default function Home() {
               <div className="relative bg-white p-3 rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden group">
                 <div className="bg-gray-200 w-full h-[450px] rounded-[1.8rem] overflow-hidden relative">
                   <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15509.704230870562!2d99.64295325!3d13.63185445!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e319089938814b%3A0xc3b83885d1170703!2z4LiE4LmI4Liy4Lii4Lil4Li54LiB4LmA4Liq4Li34Lit4Lit4LiZ4Li44Lij4Li04Lio4Li44Lig4Liy4Lio!5e0!3m2!1sth!2sth!4v1715000000000!5m2!1sth!2sth" 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.3332011746957!2d99.57713877516328!3d13.758768997131973!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e314250c5a6003%3A0x591426503e1ce901!2z4LiE4LmI4Liy4Lii4Lil4Li54LiB4LmA4Liq4Li34Lit4Lit4LiZ4Li44Liq4Lij4LiT4LmM4Lio4Li44Lig4Lih4Liy4LioIOC4iC7guKPguLLguIrguJrguLjguKPguLUt4LiB4Liy4LiN4LiI4LiZ4Lia4Li44Lij4Li1!5e0!3m2!1sth!2sth!4v1772644912554!5m2!1sth!2sth" 
                     className="w-full h-full border-0 grayscale hover:grayscale-0 transition-all duration-500" 
                     allowFullScreen loading="lazy" title="Maps"
                   ></iframe>
