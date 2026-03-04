@@ -21,7 +21,7 @@ export default function Home() {
     "/ภาพหน้าปก.jpg",
     "/2.jpg",
     "/3.jpg",
-    "/4.jpg"
+    "/4.JPG"
   ];
 
   // ระบบเปลี่ยนรูปสไลด์อัตโนมัติทุกๆ 5 วินาที
@@ -97,7 +97,7 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto w-full">
-          <span className="inline-block py-1 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-4 backdrop-blur-sm animate-pulse uppercase tracking-[0.2em]">Ready for 2026 Season</span>
+          <span className="inline-block py-1 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-4 backdrop-blur-sm animate-pulse uppercase tracking-[0.2em]">WELCOME || เปิดให้จองแล้ววันนี้!!</span>
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl leading-tight">ค่ายลูกเสือ <br className="hidden md:block" /> <span className="text-orange-500 italic">อนุสรณ์ศุภมาศ ราชบุรี</span></h1>
           <p className="text-base md:text-xl lg:text-2xl text-gray-200 mb-8 drop-shadow-md max-w-3xl mx-auto font-light leading-relaxed">ศูนย์ฝึกอบรมเยาวชนที่เน้นความปลอดภัยและคุณภาพอาหาร <br className="hidden md:block" />สร้างวินัยผ่านความสุข ในบรรยากาศธรรมชาติที่สมบูรณ์ที่สุด</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
