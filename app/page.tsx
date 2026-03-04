@@ -140,7 +140,7 @@ export default function Home() {
               <h3 className="text-3xl font-bold text-white mb-2">3 วัน 2 คืน</h3>
               <p className="text-green-200 mb-6 font-medium text-sm uppercase tracking-wide">โปรแกรมสมบูรณ์แบบที่สุด</p>
               <ul className="space-y-4 mb-8 flex-1 text-white">
-                <li className="flex items-center gap-3 text-sm font-light leading-relaxed"><CheckCircle2 className="w-5 h-5 text-orange-400 flex-shrink-0" /> รวมกิจกรรม 2 วัน 1 คืน ทั้งหมด</li>
+                <li className="flex items-center gap-3 text-sm font-light leading-relaxed"><CheckCircle2 className="w-5 h-5 text-orange-400 flex-shrink-0" /> รวมกิจกรรม 3 วัน 2 คืน ทั้งหมด</li>
                 <li className="flex items-center gap-3 text-sm font-light leading-relaxed"><CheckCircle2 className="w-5 h-5 text-orange-400 flex-shrink-0" /> กิจกรรมเดินทางไกล / สูทกรรม</li>
                 <li className="flex items-center gap-3 text-sm font-light leading-relaxed"><CheckCircle2 className="w-5 h-5 text-orange-400 flex-shrink-0" /> อาหาร 7 มื้อ + ที่พัก 2 คืน</li>
               </ul>
