@@ -10,9 +10,6 @@ import {
 import ActivityCard from '../src/components/ActivityCard'; 
 import GoogleReviews from '../src/components/GoogleReviews'; 
 
-// หมายเหตุ: Metadata ต้องย้ายไปไว้ที่ layout.tsx หรือไฟล์แยกที่เป็น Server Component 
-// เนื่องจากหน้านี้เป็น "use client" จึงไม่สามารถ export metadata ได้
-
 export default function Home() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -82,23 +79,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. About & Organizational Info */}
+      {/* 3. About & Organizational Info (Our Philosophy) */}
       <section id="about" className="py-24 scroll-mt-20 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            
+            {/* 🖼️ ส่วนรูปภาพทางด้านซ้าย (พื้นที่สีเขียวตกแต่ง) */}
             <div className="relative group">
+              {/* พื้นหลังสีเขียวมุมมนที่เป็นกรอบด้านหลังภาพ */}
               <div className="absolute -inset-4 bg-green-100 rounded-[3rem] -rotate-3 transition-transform group-hover:rotate-0 duration-500"></div>
-              <img src={galleryImages[4].src} alt="About" className="rounded-[2.5rem] shadow-2xl relative z-10 w-full h-[550px] object-cover" />
-              <div className="absolute top-6 left-6 bg-orange-500 text-white p-4 rounded-2xl z-20 shadow-lg font-black italic">- SINCE 2009 -</div>
+              
+              {/* 📸 รูปภาพหลัก: เปลี่ยน src เป็นชื่อไฟล์ภาพในโฟลเดอร์ public ของคุณได้ที่นี่ */}
+              <img 
+                src="/about-us.jpg" // เปลี่ยนเป็น "/ชื่อไฟล์.jpg" หากมีภาพในเครื่อง
+                alt="บรรยากาศค่ายอนุสรณ์ศุภมาศ" 
+                className="rounded-[2.5rem] shadow-2xl relative z-10 w-full h-[550px] object-cover" 
+              />
+              
+              {/* ป้าย SINCE สีส้ม */}
+              <div className="absolute top-6 left-6 bg-orange-500 text-white p-4 rounded-2xl z-20 shadow-lg font-black italic">
+                - SINCE 2014 -
+              </div>
             </div>
+
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 text-orange-600 font-black uppercase text-xs tracking-[0.3em]"><Heart className="w-4 h-4 fill-orange-500" /> Our Philosophy</div>
               <h2 className="text-3xl md:text-6xl font-black text-green-950 leading-none">กินอิ่ม นอนหลับ <br /> <span className="text-orange-500 italic underline decoration-green-800 decoration-8 underline-offset-8">พักสบาย คลายอารมณ์</span></h2>
               <p className="text-slate-500 text-lg leading-relaxed font-light italic border-l-4 border-orange-500 pl-6">"เราเชื่อว่าการเรียนรู้ที่ดีที่สุด เกิดขึ้นเมื่อเด็กๆ มีความสุขและรู้สึกปลอดภัย"</p>
               <p className="text-slate-600 leading-relaxed">ค่ายอนุสรณ์ศุภมาศ ราชบุรี เป็นศูนย์ฝึกอบรมในเครือโรงเรียนอนุสรณ์ศุภมาศ สมุทรสาคร มีเจตนารมย์เพื่อสร้างสถานที่ การเรียนรู้ท่ามกลางธรรมชาติบนเนื้อที่กว่า 50 ไร่ เพื่อหล่อหลอมเยาวชนให้เป็นคนดีมีวินัย ผ่านกิจกรรมลูกเสือที่สนุกและทันสมัย</p>
               <div className="flex flex-wrap gap-4 pt-4">
-                 <div className="px-6 py-3 bg-green-50 rounded-2xl border border-green-100 flex items-center gap-3"><Award className="text-green-700 w-5 h-5" /><span className="text-sm font-bold text-green-800">วิทยากรวิชาชีพผ่านการอบรมทุกคน</span></div>
-                 <div className="px-6 py-3 bg-orange-50 rounded-2xl border border-orange-100 flex items-center gap-3"><ShieldCheck className="text-orange-600 w-5 h-5" /><span className="text-sm font-bold text-orange-700">ค่ายมีมาตรฐาน พื้นที่เป็นสัดส่วนเชื่อมโยงถึงกัน</span></div>
+                 <div className="px-6 py-3 bg-green-50 rounded-2xl border border-green-100 flex items-center gap-3"><Award className="text-green-700 w-5 h-5" /><span className="text-sm font-bold text-green-800 italic">วิทยากรวิชาชีพผ่านการอบรมทุกคน</span></div>
+                 <div className="px-6 py-3 bg-orange-50 rounded-2xl border border-orange-100 flex items-center gap-3"><ShieldCheck className="text-orange-600 w-5 h-5" /><span className="text-sm font-bold text-orange-700 italic">ค่ายมีมาตรฐาน พื้นที่เป็นสัดส่วนเชื่อมโยงถึงกัน</span></div>
               </div>
             </div>
           </div>
@@ -156,7 +167,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <ActivityCard title="ฐานกิจกรรมผจญภัย" description="ทดสอบความกล้ากับสไลเดอร์น้ำสูง 10 เมตร, โดดหอ และฐานเชือกกว่า 10 รูปแบบ" image={galleryImages[0].src} Icon={Compass} />
-            <ActivityCard title="กิจกรรมรอบกองไฟ" description="ลานกิจกรรมมาตรฐานจุได้ 1,000 คน พร้อมระบบ LIVE Streaming ให้ผู้ปกครองดูจากที่บ้าน" image={galleryImages[2].src} Icon={Flame} />
+            <ActivityCard title="กิจกรรมรอบกองไฟ" description="ลานกิจกรรมมาตรฐานจุได้ 1,000 คน พร้อมระบบแสงสีเสียงเต็มรูปแบบ และบริการ LIVE Streaming ให้ผู้ปกครองดูจากที่บ้าน" image={galleryImages[2].src} Icon={Flame} />
             <ActivityCard title="ทักษะชีวิตและทีมเวิร์ค" description="วิชาประกอบอาหาร (สูทกรรม), ปฐมพยาบาล และการแก้ปัญหาร่วมกันผ่านเกมสถานการณ์จำลอง" image={galleryImages[3].src} Icon={Users} />
           </div>
         </div>
@@ -219,9 +230,9 @@ export default function Home() {
               <div className="mb-8 border-b border-white/10 pb-8 text-center">
                 <h3 className="text-3xl font-black text-white mb-2 italic">3 วัน 2 คืน</h3>
                 <div className="flex items-baseline justify-center gap-1.5 mt-6">
-                  <span className="text-green-300 text-sm font-bold uppercase">Start</span>
+                  <span className="text-green-300 text-sm font-bold uppercase">เริ่มต้น</span>
                   <span className="text-6xl font-black text-orange-400 tracking-tighter">340</span>
-                  <span className="text-green-300 text-sm font-bold uppercase">/ PAX</span>
+                  <span className="text-green-300 text-sm font-bold uppercase">/ คน</span>
                 </div>
                 <div className="mt-4 bg-white/10 py-2 rounded-xl border border-white/5 inline-block px-4"><p className="text-orange-300 text-[11px] font-black tracking-widest uppercase">Best Value Package</p></div>
               </div>
@@ -254,7 +265,7 @@ export default function Home() {
 
           {/* Instructor Fee Guide */}
           <div className="mt-20 max-w-4xl mx-auto bg-green-950 text-white rounded-[3rem] p-10 shadow-2xl relative overflow-hidden">
-             <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-orange-500 rounded-full opacity-10"></div>
+             <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-orange-50 rounded-full opacity-10"></div>
              <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
                 <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg"><Users className="w-8 h-8 text-white" /></div>
                 <div className="text-center md:text-left">
