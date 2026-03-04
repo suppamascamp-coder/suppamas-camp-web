@@ -14,6 +14,23 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+
+  // 📸 รายการรูปภาพสำหรับ Slideshow พื้นหลัง (Hero Section)
+  const heroSlides = [
+    "/ภาพหน้าปก.jpg",
+    "/2.jpg",
+    "/3.jpg",
+    "/4.jpg"
+  ];
+
+  // ระบบเปลี่ยนรูปสไลด์อัตโนมัติทุกๆ 5 วินาที
+  useEffect(() => {
+    const slideInterval = setInterval(() => {
+      setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(slideInterval);
+  }, [heroSlides.length]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -45,15 +62,43 @@ export default function Home() {
   return (
     <div className="relative font-sans antialiased text-slate-900 bg-white">
       {/* 1. Hero Section */}
-      <section id="home" className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden pt-20 pb-12">
+    <section id="home" className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden pt-20 pb-12">
         <div className="absolute inset-0 z-0">
-          <img src="https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=2000" alt="Background" className="w-full h-full object-cover" />
+          {/* 🖼️ Slideshow Layers */}
+          {heroSlides.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${
+                index === currentHeroSlide ? 'opacity-100 scale-105' : 'opacity-0 scale-100'
+              }`}
+            >
+              <img 
+                src={slide} 
+                alt={`Hero Slide ${index + 1}`} 
+                className="w-full h-full object-cover transition-transform duration-[10000ms]"
+              />
+            </div>
+          ))}
+
+          {/* Overlays */}
           <div className="absolute inset-0 bg-green-950/70 mix-blend-multiply"></div>
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80"></div>
+          
+          {/* Slide Indicators */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+            {heroSlides.map((_, i) => (
+              <button 
+                key={i} 
+                onClick={() => setCurrentHeroSlide(i)}
+                className={`h-1.5 transition-all duration-500 rounded-full ${i === currentHeroSlide ? 'w-8 bg-orange-500' : 'w-2 bg-white/30 hover:bg-white/50'}`}
+              />
+            ))}
+          </div>
         </div>
+
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto w-full">
           <span className="inline-block py-1 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-4 backdrop-blur-sm animate-pulse uppercase tracking-[0.2em]">Ready for 2026 Season</span>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white mb-6 drop-shadow-2xl leading-tight">ค่ายลูกเสือ <br className="hidden md:block" /> <span className="text-orange-500 italic">อนุสรณ์ศุภมาศ ราชบุรี</span></h1>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl leading-tight">ค่ายลูกเสือ <br className="hidden md:block" /> <span className="text-orange-500 italic">อนุสรณ์ศุภมาศ ราชบุรี</span></h1>
           <p className="text-base md:text-xl lg:text-2xl text-gray-200 mb-8 drop-shadow-md max-w-3xl mx-auto font-light leading-relaxed">ศูนย์ฝึกอบรมเยาวชนที่เน้นความปลอดภัยและคุณภาพอาหาร <br className="hidden md:block" />สร้างวินัยผ่านความสุข ในบรรยากาศธรรมชาติที่สมบูรณ์ที่สุด</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a href="#packages" className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-xl text-center">จองค่าย/ดูราคา</a>
