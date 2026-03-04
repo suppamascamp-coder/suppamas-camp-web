@@ -4,6 +4,7 @@ import {
   ShieldCheck, BedDouble, Utensils, Star, Quote 
 } from 'lucide-react';
 import ActivityCard from '../src/components/ActivityCard'; // ดึงชิ้นส่วนการ์ดมาใช้
+import GoogleReviews from '../src/components/GoogleReviews'; 
 
 export default function Home() {
   return (
@@ -54,17 +55,18 @@ export default function Home() {
       <section className="relative z-20 -mt-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 border-b-4 border-orange-500">
           <div className="text-center">
-            <div className="text-3xl md:text-4xl font-extrabold text-green-800 mb-1">15+</div>
+            <div className="text-3xl md:text-4xl font-extrabold text-green-800 mb-1">12+</div>
             <div className="text-sm md:text-base text-gray-500 font-medium">ปีแห่งประสบการณ์</div>
           </div>
           <div className="text-center md:border-l md:border-gray-200">
-            <div className="text-3xl md:text-4xl font-extrabold text-orange-500 mb-1">20+</div>
+            <div className="text-3xl md:text-4xl font-extrabold text-orange-500 mb-1">17+</div>
             <div className="text-sm md:text-base text-gray-500 font-medium">ฐานกิจกรรมผจญภัย</div>
           </div>
           <div className="text-center border-t pt-6 md:pt-0 md:border-t-0 md:border-l md:border-gray-200">
-            <div className="text-3xl md:text-4xl font-extrabold text-green-800 mb-1">1,000+</div>
-            <div className="text-sm md:text-base text-gray-500 font-medium">รองรับนักเรียน/สัปดาห์</div>
+            <div className="text-3xl md:text-4xl font-extrabold text-green-800 mb-1">600 คน</div>
+            <div className="text-sm md:text-base text-gray-500 font-medium">ต่อการรับนักเรียน</div>
           </div>
+          
           <div className="text-center border-t pt-6 md:pt-0 md:border-t-0 md:border-l md:border-gray-200">
             <div className="text-3xl md:text-4xl font-extrabold text-orange-500 mb-1">100%</div>
             <div className="text-sm md:text-base text-gray-500 font-medium">มาตรฐานความปลอดภัย</div>
@@ -85,13 +87,13 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <ActivityCard 
               title="ฐานกิจกรรมผจญภัย"
-              description="ทดสอบความกล้าหาญกับฐานไต่เชือก โดดหอ และกำแพงจำลอง ภายใต้การดูแลอย่างใกล้ชิด"
+              description="ทดสอบความกล้าหาญกับฐานไต่เชือก โดดหอ สไลเดอร์น้ำ ภายใต้การดูแลอย่างใกล้ชิด"
               image="https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=800"
               Icon={Compass}
             />
             <ActivityCard 
               title="กิจกรรมรอบกองไฟ"
-              description="ลานกิจกรรมกว้างขวาง พร้อมระบบแสงเสียงครบวงจร สำหรับค่ำคืนแห่งความทรงจำและการแสดง"
+              description="ลานกิจกรรมกว้างขวาง พร้อมระบบแสงเสียงครบวงจร พร้อมบริการ LIVE สำหรับค่ำคืนแห่งความทรงจำและการแสดง"
               image="https://images.unsplash.com/photo-1504280655536-2605761a54dc?auto=format&fit=crop&q=80&w=800"
               Icon={Flame}
             />
@@ -143,7 +145,7 @@ export default function Home() {
                 <Utensils className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">โรงอาหารมาตรฐาน</h3>
-              <p className="text-gray-600">อาหารปรุงสุกใหม่ สะอาด ถูกหลักโภชนาการ พื้นที่กว้างขวางรองรับนักเรียนและคณะครูได้พร้อมกันกว่า 1,000 คน</p>
+              <p className="text-gray-600">อาหารปรุงสุกใหม่ สะอาด ถูกหลักโภชนาการ พื้นที่กว้างขวางรองรับนักเรียนและคณะครูได้พร้อมกันกว่า 600 คน</p>
             </div>
           </div>
         </div>
@@ -206,54 +208,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. Testimonials Section (เสียงตอบรับ) */}
-      <section className="py-24 bg-green-950 text-white relative overflow-hidden">
-        {/* Decorative Background Element */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-green-800 rounded-full blur-3xl opacity-30 transform translate-x-1/2 -translate-y-1/2"></div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">ความไว้วางใจจากโรงเรียนชั้นนำ</h2>
-            <p className="text-green-200 max-w-2xl mx-auto text-lg">
-              ส่วนหนึ่งของความประทับใจจากคณะครูที่เคยพานักเรียนมาเข้าค่ายกับเรา
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { 
-                name: "คุณครูสมชาย (หัวหน้าหมวดกิจกรรม)", 
-                school: "โรงเรียนอนุบาลราชบุรี", 
-                review: "สถานที่กว้างขวาง ปลอดภัยมาก วิทยากรดูแลเด็กๆ ได้ดีเยี่ยม กิจกรรมสนุกและได้ความรู้จริงๆ ปีหน้าจะพาเด็กๆ มาอีกแน่นอนครับ" 
-              },
-              { 
-                name: "ผู้อำนวยการวิยดา", 
-                school: "โรงเรียนดรุณาราชบุรี", 
-                review: "ประทับใจเรื่องความสะอาดของห้องน้ำและโรงอาหารมากค่ะ อาหารอร่อย เด็กๆ ทานกันหมดทุกมื้อ ทีมงานมืออาชีพมากๆ คลายความกังวลของครูไปได้เยอะเลย" 
-              },
-              { 
-                name: "คุณครูเอกพล (ครูพละศึกษา)", 
-                school: "โรงเรียนเบญจมราชูทิศ", 
-                review: "ฐานผจญภัยได้มาตรฐานและมีความปลอดภัยสูงมาก อุปกรณ์เซฟตี้ใหม่และพร้อมใช้งาน เด็กๆ ได้ฝึกความกล้าหาญอย่างเต็มที่ครับ แนะนำเลยครับ" 
-              }
-            ].map((item, idx) => (
-              <div key={idx} className="bg-green-900/60 p-8 rounded-2xl border border-green-800 relative backdrop-blur-sm">
-                <Quote className="absolute top-6 right-6 w-12 h-12 text-green-700/50" />
-                <div className="flex gap-1 mb-6 relative z-10">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-orange-400 text-orange-400" />)}
-                </div>
-                <p className="text-green-50 mb-8 relative z-10 leading-relaxed italic">
-                  "{item.review}"
-                </p>
-                <div className="border-t border-green-800 pt-4 mt-auto">
-                  <p className="font-bold text-white">{item.name}</p>
-                  <p className="text-green-400 text-sm mt-1">{item.school}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+     <GoogleReviews />
 
       {/* 7. Final Call to Action Section */}
       <section className="py-20 bg-orange-500">
