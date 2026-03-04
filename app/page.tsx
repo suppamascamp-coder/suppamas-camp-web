@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Compass, Flame, Users, CheckCircle2, 
-  ShieldCheck, BedDouble, Utensils
+  ShieldCheck, BedDouble, Utensils, Info, AlertCircle
 } from 'lucide-react';
 import ActivityCard from '../src/components/ActivityCard'; 
 import GoogleReviews from '../src/components/GoogleReviews'; 
@@ -9,7 +9,7 @@ import GoogleReviews from '../src/components/GoogleReviews';
 export default function Home() {
   return (
     <>
-      {/* 1. Hero Section - ปรับปรุงความยืดหยุ่นสำหรับ Mobile/LINE */}
+      {/* 1. Hero Section */}
       <section className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden pt-20 pb-12">
         <div className="absolute inset-0 z-0">
           <img 
@@ -90,13 +90,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-green-900 mb-4">สิ่งอำนวยความสะดวก</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-lg">เราคำนึงถึงความสะอาดและสุขอนามัยเป็นสำคัญ</p>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">พื้นที่แบ่งเป็นสัดส่วน คำนึงถึงความสะอาดและสุขอนามัยเป็นสำคัญ</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="p-8 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow">
               <ShieldCheck className="w-12 h-12 text-green-700 mx-auto mb-6" />
               <h3 className="text-xl font-bold mb-3 text-gray-900">ความปลอดภัย 24 ชม.</h3>
-              <p className="text-gray-600 text-sm">กล้องวงจรปิดรอบค่าย และเจ้าหน้าที่ดูแลตลอดคืน</p>
+              <p className="text-gray-600 text-sm">กล้องวงจรปิดรอบค่ายกว่า40จุด และเจ้าหน้าที่พยาบาลดูแลตลอดคืน</p>
             </div>
             <div className="p-8 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-md transition-shadow">
               <BedDouble className="w-12 h-12 text-orange-500 mx-auto mb-6" />
@@ -112,56 +112,144 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Packages Section - ปรับลำดับและปุ่มตามสั่ง */}
+      {/* 5. Packages Section */}
       <section className="py-24 bg-gray-50" id="โปรแกรม">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-green-900 mb-4">แพ็กเกจแนะนำ</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-lg">โปรแกรมที่ออกแบบมาเพื่อพัฒนาศักยภาพเยาวชนโดยเฉพาะ</p>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg italic">ราคาประหยัด มาตรฐานสากล โปรแกรมปรับแต่งได้ตามต้องการ</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
-            {/* Package 1: One Day Trip (No Button) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
+            {/* Package 1: One Day Trip */}
             <div className="bg-white p-8 rounded-3xl border border-gray-100 flex flex-col hover:shadow-md transition-all">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">One Day Trip</h3>
-              <p className="text-gray-500 mb-6 font-medium text-sm">กิจกรรมเช้า-เย็นกลับ เน้นฐานผจญภัย</p>
-              <ul className="space-y-4 flex-1">
-                <li className="flex items-center gap-3 text-sm text-gray-600"><CheckCircle2 className="w-5 h-5 text-green-500" /> วิทยากรประจำกลุ่ม</li>
-                <li className="flex items-center gap-3 text-sm text-gray-600"><CheckCircle2 className="w-5 h-5 text-green-500" /> อุปกรณ์กิจกรรมครบชุด</li>
-                <li className="flex items-center gap-3 text-sm text-gray-600"><CheckCircle2 className="w-5 h-5 text-green-500" /> อาหารกลางวัน 1 มื้อ</li>
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">One Day Trip</h3>
+                <div className="flex items-baseline gap-1">
+                   <span className="text-gray-400 text-sm italic">เริ่มต้น</span>
+                   <span className="text-2xl font-bold text-green-800">150</span>
+                   <span className="text-gray-400 text-sm">บาท/คน</span>
+                </div>
+                <p className="text-[10px] text-orange-600 font-medium">*ไม่รวมค่าวิทยากร</p>
+              </div>
+              <ul className="space-y-3 flex-1 mb-6">
+                {["อุปกรณ์กิจกรรมครบชุด", "กิจกรรมทักษะลูกเสือ", "อาหารกลางวัน 1 มื้อ", "กิจกรรมผจญภัย","เจ้าหน้าที่พยาบาลจากมูลนิธิสว่างราชบุรีตลอดวัน"].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-sm text-gray-600">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" /> {item}
+                  </li>
+                ))}
               </ul>
             </div>
 
             {/* Package 2: 3 วัน 2 คืน (The HIGHLIGHT) */}
-            <div className="bg-green-900 p-8 rounded-3xl border border-green-800 flex flex-col transform md:-translate-y-4 shadow-2xl relative">
+            <div className="bg-green-900 p-8 rounded-3xl border border-green-800 flex flex-col transform md:-translate-y-6 shadow-2xl relative">
               <span className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-4 py-1 rounded-full text-xs font-bold flex items-center gap-1 uppercase tracking-widest shadow-lg">
                 <Flame className="w-4 h-4" /> แนะนำพิเศษ
               </span>
-              <h3 className="text-3xl font-bold text-white mb-2">3 วัน 2 คืน</h3>
-              <p className="text-green-200 mb-6 font-medium text-sm uppercase tracking-wide">โปรแกรมสมบูรณ์แบบที่สุด</p>
-              <ul className="space-y-4 mb-8 flex-1 text-white">
-                <li className="flex items-center gap-3 text-sm font-light leading-relaxed"><CheckCircle2 className="w-5 h-5 text-orange-400 flex-shrink-0" /> รวมกิจกรรม 3 วัน 2 คืน ทั้งหมด</li>
-                <li className="flex items-center gap-3 text-sm font-light leading-relaxed"><CheckCircle2 className="w-5 h-5 text-orange-400 flex-shrink-0" /> กิจกรรมเดินทางไกล / สูทกรรม</li>
-                <li className="flex items-center gap-3 text-sm font-light leading-relaxed"><CheckCircle2 className="w-5 h-5 text-orange-400 flex-shrink-0" /> อาหาร 7 มื้อ + ที่พัก 2 คืน</li>
+              
+              <div className="mb-6">
+                <h3 className="text-3xl font-bold text-white mb-1">3 วัน 2 คืน</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-green-200 text-sm">เริ่มต้น</span>
+                  <span className="text-4xl font-black text-orange-400">340</span>
+                  <span className="text-green-200 text-sm">บาท/คน</span>
+                </div>
+                <p className="text-green-300 mt-2 text-xs font-semibold border-l-2 border-orange-500 pl-2">โปรแกรมครบตามหลักสูตร</p>
+              </div>
+
+              <ul className="space-y-2.5 mb-8 flex-1 text-white">
+                {[
+                  "กิจกรรมทักษะลูกเสือ",
+                  "การบันเทิงในกองลูกเสือ",
+                  "กิจกรรมบุกเบิก",
+                  "กิจกรรมประกอบอาหาร / สูทกรรม",
+                  "กิจกรรมผจญภัย",
+                  "กิจกรรมรอบกองไฟ",
+                  "กิจกรรมเดินทางไกล / สำรวจ",
+                  "อาหาร 7 มื้อ + ที่พัก 2 คืน",
+                  "พยาบาลจากมูลนิธิสว่างราชบุรี 24 ชม."
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-[13px] font-light leading-snug">
+                    <CheckCircle2 className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
+
               <a 
                 href="/campcalendar.html" 
-                className="w-full py-4 rounded-xl font-extrabold bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-xl text-center text-lg active:scale-95"
+                className="w-full py-4 rounded-xl font-extrabold bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-xl text-center text-lg active:scale-95 flex items-center justify-center gap-2"
               >
                 เช็กคิวว่างทันที
               </a>
+              <p className="text-center text-[10px] text-green-300 mt-3">*อัตรานี้ยังไม่รวมค่าวิทยากร</p>
             </div>
 
-            {/* Package 3: 2 วัน 1 คืน (No Button) */}
+            {/* Package 3: 2 วัน 1 คืน */}
             <div className="bg-white p-8 rounded-3xl border border-gray-100 flex flex-col hover:shadow-md transition-all">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">2 วัน 1 คืน</h3>
-              <p className="text-gray-500 mb-6 font-medium text-sm">โปรแกรมยอดฮิต รวมที่พักและกองไฟ</p>
-              <ul className="space-y-4 flex-1">
-                <li className="flex items-center gap-3 text-sm text-gray-600"><CheckCircle2 className="w-5 h-5 text-green-500" /> วิทยากรดูแล 24 ชม.</li>
-                <li className="flex items-center gap-3 text-sm text-gray-600"><CheckCircle2 className="w-5 h-5 text-green-500" /> กิจกรรมรอบกองไฟจัดเต็ม</li>
-                <li className="flex items-center gap-3 text-sm text-gray-600"><CheckCircle2 className="w-5 h-5 text-green-500" /> อาหาร 4 มื้อ + ที่พัก 1 คืน</li>
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">2 วัน 1 คืน</h3>
+                <div className="flex items-baseline gap-1">
+                   <span className="text-gray-400 text-sm italic">เริ่มต้น</span>
+                   <span className="text-2xl font-bold text-green-800">240</span>
+                   <span className="text-gray-400 text-sm">บาท/คน</span>
+                </div>
+                <p className="text-[10px] text-orange-600 font-medium">*ไม่รวมค่าวิทยากร</p>
+              </div>
+              <ul className="space-y-3 flex-1 mb-6">
+                {[
+                  "กิจกรรมบุกเบิก",
+                  "กิจกรรมประกอบอาหาร / สูทกรรม",
+                  "กิจกรรมผจญภัย",
+                  "กิจกรรมรอบกองไฟ",
+                  "กิจกรรมเดินทางไกล / สำรวจ",
+                  "อาหาร 4 มื้อ + ที่พัก 1 คืน",
+                  "เจ้าหน้าที่พยาบาลจากมูลนิธิสว่างราชบุรี 24 ชม."
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-sm text-gray-600">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" /> {item}
+                  </li>
+                ))}
               </ul>
             </div>
+          </div>
+
+          {/* ส่วนข้อมูลค่าวิทยากรเพิ่มเติม */}
+          <div className="mt-16 max-w-4xl mx-auto bg-white rounded-3xl p-6 md:p-10 border border-orange-100 shadow-sm">
+            <div className="flex items-center gap-3 mb-6 text-orange-600">
+              <AlertCircle className="w-6 h-6" />
+              <h4 className="text-xl font-bold">อัตราค่าธรรมเนียมวิทยากร (Instructor Fee)</h4>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <p className="font-bold text-green-900 border-b pb-2">ค่ายค้างแรม (2 วัน 1 คืน / 3 วัน 2 คืน)</p>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600 italic">ต่ำกว่า 250 ท่าน</span>
+                  <span className="font-bold text-gray-900">เหมา 15,000 บาท</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600 italic">250 ท่าน ขึ้นไป</span>
+                  <span className="font-bold text-orange-600 underline">60 บาท / ท่าน</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <p className="font-bold text-green-900 border-b pb-2">ค่ายกลางวัน (Day Camp)</p>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600 italic">ต่ำกว่า 200 ท่าน</span>
+                  <span className="font-bold text-gray-900">เหมา 6,000 บาท</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600 italic">200 ท่าน ขึ้นไป</span>
+                  <span className="font-bold text-orange-600 underline">30 บาท / ท่าน</span>
+                </div>
+              </div>
+            </div>
+            
+            <p className="mt-8 text-xs text-gray-400 text-center italic">
+              * ทางค่ายจะสรุปยอดรวมพร้อมค่าวิทยากรให้ในใบเสนอราคาอย่างเป็นทางการอีกครั้ง
+            </p>
           </div>
         </div>
       </section>
