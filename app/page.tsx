@@ -18,7 +18,7 @@ export default function Home() {
 
   // 📸 รายการรูปภาพสำหรับ Slideshow พื้นหลัง (Hero Section)
   const heroSlides = [
-    "/ภาพหน้าปก.jpg",
+    "/ภาพหน้าปก.JPG",
     "/2.jpg",
     "/3.jpg",
     "/4.JPG"
