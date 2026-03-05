@@ -7,8 +7,8 @@ import {
   Lock, Mail, ArrowRight, ShieldCheck, Loader2
 } from 'lucide-react';
 
-// 📌 อัปเดต Path: วิ่งจาก app/admin ถอยหลัง 2 ก้าวไปหา src/lib/firebase
-import { db, storage } from '../../src/lib/firebase';
+import { db, storage, auth } from '../../src/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
@@ -30,13 +30,17 @@ export default function AdminPage() {
     { id: 'settings', label: 'ตั้งค่าระบบ', icon: Settings },
   ];
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoggingIn(true);
-    setTimeout(() => {
-      setIsLoggingIn(false);
+    try {
+      await signInWithEmailAndPassword(auth, loginForm.email, loginForm.password);
       setIsAuthenticated(true);
-    }, 1000);
+    } catch (error) {
+      alert("อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง!");
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -147,6 +151,13 @@ export default function AdminPage() {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [filter, setFilter] = useState('ทั้งหมด');
     
+    // State สำหรับ Popup ระบุชื่อรูปภาพ
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [pendingFile, setPendingFile] = useState(null);
+    const [imageName, setImageName] = useState('');
+    const [imageCategory, setImageCategory] = useState('กิจกรรม');
+    const [previewUrl, setPreviewUrl] = useState(null);
+
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -168,7 +179,8 @@ export default function AdminPage() {
       fetchImages();
     }, []);
 
-    const handleFileSelect = async (e) => {
+    // เมื่อผู้ใช้เลือกไฟล์ จะเปิด Popup ให้ตั้งชื่อก่อน
+    const handleFileSelect = (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
@@ -177,8 +189,27 @@ export default function AdminPage() {
         return;
       }
 
+      setPendingFile(file);
+      setPreviewUrl(URL.createObjectURL(file)); // สร้างรูปพรีวิว
+      setImageName(''); // ล้างชื่อเก่า
+      setImageCategory(filter === 'ทั้งหมด' ? 'กิจกรรม' : filter); // อิงหมวดหมู่ปัจจุบัน
+      setShowUploadModal(true); // เปิด Modal
+      
+      // เคลียร์ค่า input เพื่อให้เลือกไฟล์เดิมซ้ำได้ถ้ายกเลิก
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    // ฟังก์ชันกดยืนยันอัปโหลดจาก Popup
+    const confirmUpload = async () => {
+      if (!imageName.trim()) {
+        alert('กรุณาระบุ "ชื่อหรือคำอธิบายภาพ" ก่อนอัปโหลดครับ');
+        return;
+      }
+
+      setShowUploadModal(false);
       setIsUploading(true);
       
+      const file = pendingFile;
       const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -197,8 +228,8 @@ export default function AdminPage() {
           
           const newImageData = {
             src: downloadURL,
-            name: file.name,
-            category: filter === 'ทั้งหมด' ? 'กิจกรรม' : filter,
+            name: imageName, // ใช้ชื่อที่ผู้ใช้พิมพ์แทนชื่อไฟล์
+            category: imageCategory,
             createdAt: serverTimestamp(),
             storagePath: uploadTask.snapshot.ref.fullPath
           };
@@ -212,6 +243,8 @@ export default function AdminPage() {
 
           setIsUploading(false);
           setUploadProgress(0);
+          setPendingFile(null);
+          if (previewUrl) URL.revokeObjectURL(previewUrl);
         }
       );
     };
@@ -235,7 +268,7 @@ export default function AdminPage() {
     const filteredImages = filter === 'ทั้งหมด' ? images : images.filter(img => img.category === filter);
 
     return (
-      <div className="space-y-10 animate-in fade-in duration-500">
+      <div className="space-y-10 animate-in fade-in duration-500 relative">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div>
             <h2 className="text-3xl font-black text-slate-800 tracking-tight uppercase italic underline decoration-orange-500 decoration-4 underline-offset-8">จัดการแกลลอรี่ภาพ</h2>
@@ -259,6 +292,7 @@ export default function AdminPage() {
           </button>
         </div>
 
+        {/* ตัวกรองหมวดหมู่ */}
         <div className="flex flex-wrap gap-4 border-b border-slate-100 pb-6">
            {['ทั้งหมด', 'กิจกรรม', 'สถานที่', 'ห้องพัก', 'อาหาร', 'บุคลากร'].map((cat, i) => (
              <button 
@@ -270,6 +304,7 @@ export default function AdminPage() {
            ))}
         </div>
 
+        {/* ตารางแสดงรูปภาพ */}
         {isLoading ? (
           <div className="flex justify-center items-center h-64"><Loader2 className="w-10 h-10 animate-spin text-orange-500" /></div>
         ) : filteredImages.length === 0 ? (
@@ -280,7 +315,8 @@ export default function AdminPage() {
                <div key={img.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all group">
                   <div className="relative h-56 overflow-hidden bg-slate-100">
                      <img src={img.src} alt={img.name} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" />
-                     <div className="absolute top-4 left-4 px-4 py-1.5 bg-green-950/90 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-white tracking-widest">
+                     {/* ป้าย Category มุมซ้ายบน */}
+                     <div className="absolute top-4 left-4 px-4 py-1.5 bg-green-950/90 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-white tracking-widest shadow-lg">
                         {img.category}
                      </div>
                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
@@ -293,13 +329,74 @@ export default function AdminPage() {
                      </div>
                   </div>
                   <div className="p-6">
-                     <h4 className="font-black text-slate-800 truncate mb-1" title={img.name}>{img.name}</h4>
+                     {/* แสดงชื่อภาพที่ตั้งเอง */}
+                     <h4 className="font-black text-slate-800 truncate mb-1 text-lg" title={img.name}>{img.name}</h4>
                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter italic">
                         {img.createdAt?.toDate ? img.createdAt.toDate().toLocaleDateString('th-TH') : "เพิ่งอัปโหลด"}
                      </p>
                   </div>
                </div>
              ))}
+          </div>
+        )}
+
+        {/* 🌟 POPUP MODAL สำหรับตั้งชื่อรูปภาพ 🌟 */}
+        {showUploadModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-black text-slate-800">รายละเอียดรูปภาพ</h3>
+                <button onClick={() => setShowUploadModal(false)} className="text-slate-400 hover:text-rose-500 transition-colors">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              {/* พรีวิวรูปภาพ */}
+              <div className="w-full h-48 bg-slate-100 rounded-[1.5rem] mb-6 overflow-hidden border border-slate-200">
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">ชื่อ/คำอธิบายภาพ <span className="text-rose-500">*</span></label>
+                  <input 
+                    type="text" 
+                    placeholder="เช่น โรงอาหาร, ลานหน้าเสาธง, กระโดดหอ" 
+                    value={imageName}
+                    onChange={(e) => setImageName(e.target.value)}
+                    autoFocus
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all outline-none font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">หมวดหมู่</label>
+                  <select 
+                    value={imageCategory}
+                    onChange={(e) => setImageCategory(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all outline-none font-bold text-slate-700 appearance-none"
+                  >
+                    {['กิจกรรม', 'สถานที่', 'ห้องพัก', 'อาหาร', 'บุคลากร'].map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-8">
+                <button 
+                  onClick={() => setShowUploadModal(false)}
+                  className="flex-1 py-4 rounded-2xl font-black text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors"
+                >
+                  ยกเลิก
+                </button>
+                <button 
+                  onClick={confirmUpload}
+                  className="flex-1 py-4 rounded-2xl font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-xl shadow-orange-500/30"
+                >
+                  บันทึกและอัปโหลด
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
