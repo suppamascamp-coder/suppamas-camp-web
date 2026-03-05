@@ -4,20 +4,21 @@ import {
   LayoutDashboard, Home, Tent, Package, CalendarDays, 
   Image as ImageIcon, Settings, Menu, X, Bell, Plus, 
   Trash2, Search, TrendingUp, Users, Upload, Eye, 
-  Lock, Mail, ArrowRight, ShieldCheck, Loader2
+  Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit
 } from 'lucide-react';
 
+// 📌 แก้ไข Path ให้ถูกต้องตามโครงสร้างโฟลเดอร์ของคุณครู
 import { db, storage, auth } from '../../src/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
 
-  const [activeTab, setActiveTab] = useState('gallery'); 
+  const [activeTab, setActiveTab] = useState('activities'); // ตั้งให้เปิดมาเจอหน้ากิจกรรมเลยเพื่อทดสอบ
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
@@ -144,6 +145,301 @@ export default function AdminPage() {
     </div>
   );
 
+  // ==========================================
+  // 🎯 VIEW: จัดการฐานกิจกรรม (Activities & Interactive Map)
+  // ==========================================
+  const ActivitiesView = () => {
+    const [bases, setBases] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    
+    // ฟอร์มข้อมูลฐาน
+    const [formData, setFormData] = useState({
+      id_number: '',
+      name: '',
+      desc: '',
+      top: '50%',
+      left: '50%',
+      img: '',
+      storagePath: ''
+    });
+    
+    const [pendingFile, setPendingFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const fileInputRef = useRef(null);
+
+    // ดึงข้อมูลฐานกิจกรรมจาก Firestore
+    useEffect(() => {
+      const fetchBases = async () => {
+        try {
+          const q = query(collection(db, "adventure_bases"), orderBy("id_number", "asc"));
+          const querySnapshot = await getDocs(q);
+          const fetchedBases = [];
+          querySnapshot.forEach((doc) => {
+            fetchedBases.push({ id: doc.id, ...doc.data() });
+          });
+          setBases(fetchedBases);
+        } catch (error) {
+          console.error("Error fetching bases: ", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchBases();
+    }, []);
+
+    const handleFileSelect = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        alert("ขนาดไฟล์เกิน 5MB");
+        return;
+      }
+      setPendingFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    };
+
+    // 🎯 ฟังก์ชันอัจฉริยะ: กดบนภาพแผนที่แล้วอัปเดตแกน X/Y อัตโนมัติ
+    const handleMapClick = (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      
+      setFormData({
+        ...formData,
+        left: `${x.toFixed(1)}%`,
+        top: `${y.toFixed(1)}%`
+      });
+    };
+
+    const openAddModal = () => {
+      setEditingId(null);
+      setFormData({ id_number: bases.length + 1, name: '', desc: '', top: '50%', left: '50%', img: '', storagePath: '' });
+      setPendingFile(null);
+      setPreviewUrl(null);
+      setIsModalOpen(true);
+    };
+
+    const openEditModal = (base) => {
+      setEditingId(base.id);
+      setFormData(base);
+      setPendingFile(null);
+      setPreviewUrl(base.img);
+      setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id, storagePath) => {
+      if(window.confirm('ยืนยันการลบฐานกิจกรรมนี้?')) {
+        try {
+          await deleteDoc(doc(db, "adventure_bases", id));
+          if (storagePath) {
+            const fileRef = ref(storage, storagePath);
+            await deleteObject(fileRef);
+          }
+          setBases(bases.filter(b => b.id !== id));
+        } catch (error) {
+          console.error("Error deleting: ", error);
+          alert("เกิดข้อผิดพลาดในการลบ");
+        }
+      }
+    };
+
+    const handleSave = async (e) => {
+      e.preventDefault();
+      setIsUploading(true);
+
+      let finalImageUrl = formData.img;
+      let finalStoragePath = formData.storagePath;
+
+      // ถ้ามีการเลือกรูปใหม่ ให้อัปโหลดก่อน
+      if (pendingFile) {
+        const storageRef = ref(storage, `bases/${Date.now()}_${pendingFile.name}`);
+        const uploadTask = await uploadBytesResumable(storageRef, pendingFile);
+        finalImageUrl = await getDownloadURL(uploadTask.ref);
+        finalStoragePath = uploadTask.ref.fullPath;
+      }
+
+      const baseDataToSave = {
+        id_number: Number(formData.id_number),
+        name: formData.name,
+        desc: formData.desc,
+        top: formData.top,
+        left: formData.left,
+        img: finalImageUrl,
+        storagePath: finalStoragePath,
+        updatedAt: serverTimestamp()
+      };
+
+      try {
+        if (editingId) {
+          // แก้ไขของเดิม
+          await updateDoc(doc(db, "adventure_bases", editingId), baseDataToSave);
+          setBases(bases.map(b => b.id === editingId ? { ...b, ...baseDataToSave } : b));
+        } else {
+          // เพิ่มของใหม่
+          baseDataToSave.createdAt = serverTimestamp();
+          const docRef = await addDoc(collection(db, "adventure_bases"), baseDataToSave);
+          setBases([...bases, { id: docRef.id, ...baseDataToSave }].sort((a,b) => a.id_number - b.id_number));
+        }
+        setIsModalOpen(false);
+      } catch (error) {
+        console.error("Error saving base: ", error);
+        alert("บันทึกไม่สำเร็จ");
+      } finally {
+        setIsUploading(false);
+      }
+    };
+
+    return (
+      <div className="space-y-10 animate-in fade-in duration-500 relative">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <div>
+            <h2 className="text-3xl font-black text-slate-800 tracking-tight uppercase italic underline decoration-orange-500 decoration-4 underline-offset-8">จัดการฐานกิจกรรม</h2>
+            <p className="text-slate-400 text-sm mt-3 font-medium">เพิ่ม/ลบ ฐานกิจกรรม และปักหมุดบนแผนที่ Interactive</p>
+          </div>
+          <button 
+            onClick={openAddModal}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-orange-500/20 transition-all active:scale-95"
+          >
+            <Plus className="w-6 h-6" /> เพิ่มฐานใหม่
+          </button>
+        </div>
+
+        {/* แผนที่พรีวิวรวมด้านบน (ดูว่ามีหมุดตรงไหนบ้าง) */}
+        <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col md:flex-row gap-8">
+           <div className="w-full md:w-1/2 h-64 bg-slate-200 rounded-[1.5rem] relative overflow-hidden bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800')] bg-cover bg-center border-4 border-slate-100">
+              <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]"></div>
+              {bases.map(base => (
+                <div 
+                  key={base.id} 
+                  className="absolute w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg transform -translate-x-1/2 -translate-y-1/2 border-2 border-white"
+                  style={{ top: base.top, left: base.left }}
+                >
+                  {base.id_number}
+                </div>
+              ))}
+           </div>
+           <div className="w-full md:w-1/2 flex flex-col justify-center">
+              <h3 className="text-2xl font-black text-green-950 mb-2">พรีวิวแผนที่ Interactive</h3>
+              <p className="text-slate-500 mb-6">หมุดทั้งหมดจะถูกดึงไปแสดงที่หน้าแรกของเว็บไซต์ทันที เมื่อมีการกดบันทึก</p>
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="bg-green-50 p-4 rounded-2xl border border-green-100"><p className="text-xs text-green-600 font-bold uppercase mb-1">จำนวนฐานทั้งหมด</p><p className="text-3xl font-black text-green-800">{bases.length}</p></div>
+              </div>
+           </div>
+        </div>
+
+        {/* ตารางรายการฐาน */}
+        {isLoading ? (
+          <div className="flex justify-center h-32 items-center"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bases.map((base) => (
+              <div key={base.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group flex gap-4 items-center">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200 relative">
+                  {base.img ? <img src={base.img} alt={base.name} className="w-full h-full object-cover" /> : <Map className="w-8 h-8 text-slate-300 absolute top-6 left-6" />}
+                  <div className="absolute top-1 left-1 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-[10px] border border-white">{base.id_number}</div>
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <h4 className="font-black text-slate-800 truncate" title={base.name}>{base.name}</h4>
+                  <p className="text-xs text-slate-400 mt-1 font-medium truncate">พิกัด: {base.top}, {base.left}</p>
+                </div>
+                <div className="flex flex-col gap-2 shrink-0">
+                  <button onClick={() => openEditModal(base)} className="p-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-orange-500 hover:text-white transition-colors"><Edit className="w-4 h-4" /></button>
+                  <button onClick={() => handleDelete(base.id, base.storagePath)} className="p-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-rose-500 hover:text-white transition-colors"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 🌟 Modal เพิ่ม/แก้ไขฐาน และ จิ้มแผนที่ 🌟 */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-green-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 flex flex-col md:flex-row gap-8">
+              
+              {/* ซ้าย: ฟอร์มกรอกข้อมูล */}
+              <div className="w-full md:w-1/2 space-y-5">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-2xl font-black text-slate-800">{editingId ? 'แก้ไขข้อมูลฐาน' : 'เพิ่มฐานกิจกรรมใหม่'}</h3>
+                </div>
+                
+                <div className="flex gap-4">
+                  <div className="w-1/3">
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-2">หมายเลขฐาน</label>
+                    <input type="number" required value={formData.id_number} onChange={e => setFormData({...formData, id_number: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-black text-center" />
+                  </div>
+                  <div className="w-2/3">
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-2">ชื่อฐานกิจกรรม</label>
+                    <input type="text" required placeholder="เช่น ฐานกระโดดหอ" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-bold" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">รายละเอียด (Description)</label>
+                  <textarea rows="3" required placeholder="อธิบายกิจกรรมสั้นๆ..." value={formData.desc} onChange={e => setFormData({...formData, desc: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-medium resize-none"></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">รูปภาพประจำฐาน</label>
+                  <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+                  <div className="flex gap-4 items-center">
+                    <button type="button" onClick={() => fileInputRef.current.click()} className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4" /> เลือกรูปภาพ
+                    </button>
+                    {previewUrl && <img src={previewUrl} className="w-12 h-12 rounded-lg object-cover border border-slate-200" alt="preview" />}
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-6 mt-6 border-t border-slate-100">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 rounded-2xl font-black text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors">ยกเลิก</button>
+                  <button onClick={handleSave} disabled={isUploading} className="flex-1 py-4 rounded-2xl font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-xl flex justify-center items-center gap-2">
+                    {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'บันทึกข้อมูล'}
+                  </button>
+                </div>
+              </div>
+
+              {/* ขวา: ระบบคลิกปักหมุดบนแผนที่อัจฉริยะ */}
+              <div className="w-full md:w-1/2 flex flex-col">
+                <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 mb-4">
+                  <h4 className="font-black text-orange-800 text-sm flex items-center gap-2 mb-1"><Map className="w-4 h-4" /> ระบบปักหมุดอัจฉริยะ</h4>
+                  <p className="text-xs text-orange-600 font-medium">คลิกตำแหน่งบนรูปแผนที่ด้านล่าง เพื่อย้ายหมุดหมายเลขฐานโดยอัตโนมัติ</p>
+                </div>
+                
+                {/* พื้นที่แผนที่สำหรับคลิก */}
+                <div 
+                  className="w-full h-[300px] md:h-full bg-slate-200 rounded-[2rem] relative overflow-hidden cursor-crosshair border-4 border-slate-100 shadow-inner group bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800')] bg-cover bg-center"
+                  onClick={handleMapClick}
+                >
+                   <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] group-hover:bg-white/40 transition-colors"></div>
+                   
+                   {/* หมุดที่ขยับตามการคลิก */}
+                   <div 
+                     className="absolute w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-xl shadow-2xl transform -translate-x-1/2 -translate-y-1/2 border-4 border-white transition-all duration-300 ease-out z-10"
+                     style={{ top: formData.top, left: formData.left }}
+                   >
+                     {formData.id_number || '?'}
+                   </div>
+                </div>
+                
+                {/* แสดงตัวเลขพิกัดให้เห็น */}
+                <div className="flex gap-4 mt-4">
+                  <div className="flex-1 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 flex justify-between items-center"><span className="text-[10px] font-bold text-slate-400 uppercase">แกน Y (Top)</span> <span className="font-black text-slate-700">{formData.top}</span></div>
+                  <div className="flex-1 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 flex justify-between items-center"><span className="text-[10px] font-bold text-slate-400 uppercase">แกน X (Left)</span> <span className="font-black text-slate-700">{formData.left}</span></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+
   const GalleryView = () => {
     const [images, setImages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -179,7 +475,6 @@ export default function AdminPage() {
       fetchImages();
     }, []);
 
-    // เมื่อผู้ใช้เลือกไฟล์ จะเปิด Popup ให้ตั้งชื่อก่อน
     const handleFileSelect = (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -190,16 +485,14 @@ export default function AdminPage() {
       }
 
       setPendingFile(file);
-      setPreviewUrl(URL.createObjectURL(file)); // สร้างรูปพรีวิว
-      setImageName(''); // ล้างชื่อเก่า
-      setImageCategory(filter === 'ทั้งหมด' ? 'กิจกรรม' : filter); // อิงหมวดหมู่ปัจจุบัน
-      setShowUploadModal(true); // เปิด Modal
+      setPreviewUrl(URL.createObjectURL(file)); 
+      setImageName(''); 
+      setImageCategory(filter === 'ทั้งหมด' ? 'กิจกรรม' : filter); 
+      setShowUploadModal(true); 
       
-      // เคลียร์ค่า input เพื่อให้เลือกไฟล์เดิมซ้ำได้ถ้ายกเลิก
       if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    // ฟังก์ชันกดยืนยันอัปโหลดจาก Popup
     const confirmUpload = async () => {
       if (!imageName.trim()) {
         alert('กรุณาระบุ "ชื่อหรือคำอธิบายภาพ" ก่อนอัปโหลดครับ');
@@ -228,10 +521,10 @@ export default function AdminPage() {
           
           const newImageData = {
             src: downloadURL,
-            name: imageName, // ใช้ชื่อที่ผู้ใช้พิมพ์แทนชื่อไฟล์
+            name: imageName, 
             category: imageCategory,
             createdAt: serverTimestamp(),
-            storagePath: uploadTask.snapshot.ref.fullPath
+            storagePath: uploadTask.snapshot.ref.fullPath 
           };
 
           try {
@@ -435,8 +728,9 @@ export default function AdminPage() {
           <div className="max-w-7xl mx-auto pb-20">
             {activeTab === 'dashboard' && <DashboardView />}
             {activeTab === 'gallery' && <GalleryView />}
+            {activeTab === 'activities' && <ActivitiesView />}
             
-            {['homepage', 'activities', 'packages', 'bookings', 'settings'].includes(activeTab) && (
+            {['homepage', 'packages', 'bookings', 'settings'].includes(activeTab) && (
               <div className="flex flex-col items-center justify-center min-h-[500px] border-4 border-dashed border-slate-100 rounded-[4rem] bg-white/50 text-slate-300 group hover:border-orange-500/20 transition-all">
                 <div className="p-10 bg-white rounded-[2.5rem] shadow-2xl mb-8 group-hover:scale-110 transition-transform shadow-slate-200/50"><Settings className="w-16 h-16 text-slate-200 animate-spin-slow" /></div>
                 <h3 className="text-3xl font-black text-slate-400 mb-2 uppercase italic tracking-tighter">Feature In Development</h3>
