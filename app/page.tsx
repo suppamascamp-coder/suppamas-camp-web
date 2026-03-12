@@ -5,7 +5,7 @@ import {
   ShieldCheck, BedDouble, Utensils, AlertCircle,
   ArrowRight, Image as ImageIcon, MapPin, Navigation, Heart,
   Phone, Facebook, MessageCircle, Clock, UserCheck, Award,
-  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles, Calendar, Info
+  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles, Calendar, Info, ZoomIn
 } from 'lucide-react';
 import GoogleReviews from '../src/components/GoogleReviews'; 
 import AdventureMapModal from '../src/components/AdventureMapModal'; 
@@ -153,9 +153,41 @@ export default function Home() {
     { q: "เครื่องเซ่นไหว้และป้ายชื่อต้องเตรียมไหม?", a: "ไม่ต้องเตรียม ทางค่ายมีบริการให้พร้อม" }
   ];
 
+  // 🌟 Schema Markup สำหรับ SEO Local Business 🌟
+  // ข้อมูลส่วนนี้จะช่วยให้ Google เข้าใจโครงสร้างเว็บเราและดันอันดับ "ค่ายลูกเสือราชบุรี" ได้ดีขึ้นมาก
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี",
+    "alternateName": "ค่ายศุภมาศ",
+    "description": "ศูนย์ฝึกอบรมเยาวชนและค่ายลูกเสือที่ได้มาตรฐานที่สุดในจังหวัดราชบุรี กิจกรรมผจญภัยครบครัน ปลอดภัย 100%",
+    "url": "https://www.suppamascamp.me", // ใส่โดเมนจริงของคุณครู
+    "telephone": "+66865515110",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "ต.หนองกวาง",
+      "addressLocality": "อ.โพธาราม",
+      "addressRegion": "จ.ราชบุรี",
+      "postalCode": "70120",
+      "addressCountry": "TH"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "13.758768997131973", // สามารถใส่ละติจูดจริงได้
+      "longitude": "99.57713877516328"  // สามารถใส่ลองจิจูดจริงได้
+    },
+    "image": displaySlides[0],
+    "priceRange": "$$"
+  };
+
   return (
     <div className="relative font-sans antialiased text-slate-900 bg-white">
-      
+      {/* 🚀 ฝัง JSON-LD เพื่อทำ SEO แบบเจาะลึก */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* 1. Hero Section */}
       <section id="home" className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden pt-20 pb-12">
         <div className="absolute inset-0 z-0">
@@ -166,7 +198,11 @@ export default function Home() {
                 index === currentHeroSlide ? 'opacity-100 scale-105' : 'opacity-0 scale-100'
               }`}
             >
-              <img src={slideUrl} alt={`Hero Slide ${index + 1}`} className="w-full h-full object-cover transition-transform duration-[10000ms]" />
+              <img 
+                src={slideUrl} 
+                alt={`ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี รูปที่ ${index + 1}`} // SEO: อัปเดต alt tag
+                className="w-full h-full object-cover transition-transform duration-[10000ms]" 
+              />
             </div>
           ))}
           <div className="absolute inset-0 bg-green-950/70 mix-blend-multiply"></div>
@@ -183,6 +219,7 @@ export default function Home() {
           <span className="inline-block py-1.5 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-6 backdrop-blur-sm uppercase tracking-widest">
             {displayTexts.badge}
           </span>
+          {/* SEO: H1 Tag คือจุดสำคัญที่สุด ใช้ดึงคำที่แอดมินตั้งมาแยกบรรทัด */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl leading-tight">
             {(() => {
               const titleStr = displayTexts.title || '';
@@ -237,12 +274,13 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative group">
               <div className="absolute -inset-4 bg-green-100 rounded-[3rem] -rotate-3 transition-transform group-hover:rotate-0 duration-500"></div>
-              <img src="/about-us.jpg" alt="บรรยากาศค่ายอนุสรณ์ศุภมาศ" className="rounded-[2.5rem] shadow-2xl relative z-10 w-full h-[550px] object-cover" />
+              <img src="/about-us.jpg" alt="ประวัติค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี" className="rounded-[2.5rem] shadow-2xl relative z-10 w-full h-[550px] object-cover" />
               <div className="absolute top-6 left-6 bg-orange-500 text-white p-4 rounded-2xl z-20 shadow-lg font-black italic">- SINCE 2014 -</div>
             </div>
 
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 text-orange-600 font-black uppercase text-xs tracking-[0.3em]"><Heart className="w-4 h-4 fill-orange-500" /> Our Philosophy</div>
+              {/* SEO: H2 Tag */}
               <h2 className="text-3xl md:text-6xl font-black text-green-950 leading-none">กินอิ่ม นอนหลับ <br /> <span className="text-orange-500 italic underline decoration-green-800 decoration-8 underline-offset-8">พักสบาย คลายอารมณ์</span></h2>
               <p className="text-slate-500 text-lg leading-relaxed font-light italic border-l-4 border-orange-500 pl-6">"เราเชื่อว่าการเรียนรู้ที่ดีที่สุด เกิดขึ้นเมื่อเด็กๆ มีความสุขและรู้สึกปลอดภัย"</p>
               <p className="text-slate-600 leading-relaxed">ค่ายอนุสรณ์ศุภมาศ ราชบุรี เป็นศูนย์ฝึกอบรมในเครือโรงเรียนอนุสรณ์ศุภมาศ สมุทรสาคร มีเจตนารมย์เพื่อสร้างสถานที่ การเรียนรู้ท่ามกลางธรรมชาติบนเนื้อที่กว่า 50 ไร่ เพื่อหล่อหลอมเยาวชนให้เป็นคนดีมีวินัย ผ่านกิจกรรมลูกเสือที่สนุกและทันสมัย</p>
@@ -292,7 +330,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. 🌟 Activities Section (ดึงข้อมูล 4 การ์ด ไดนามิกจาก Firebase) 🌟 */}
+      {/* 5. Activities Section */}
       <section id="activities" className="py-24 scroll-mt-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 text-center md:text-left">
@@ -312,7 +350,7 @@ export default function Home() {
               return (
                 <div key={index} className="group rounded-[2.5rem] overflow-hidden bg-white shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-100 relative flex flex-col">
                   <div className="relative h-64 overflow-hidden shrink-0 bg-slate-200">
-                    <img src={card.img} alt={card.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <img src={card.img} alt={`กิจกรรมค่ายลูกเสือราชบุรี: ${card.title}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className={`absolute inset-0 bg-gradient-to-t ${isFirst ? 'from-green-950/90' : 'from-black/80'} via-black/20 to-transparent`}></div>
                     <div className="absolute bottom-4 left-4 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
                       <Icon className="w-5 h-5 text-orange-400" />
@@ -334,7 +372,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. 🌟 Facilities & Safety (ดึงข้อมูลสิ่งอำนวยความสะดวกแบบ Dynamic) 🌟 */}
+      {/* 6. Facilities & Safety */}
       <section id="facilities" className="py-24 bg-green-950 text-white scroll-mt-20 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-96 h-96 bg-green-800 rounded-full blur-[100px] opacity-20 -mr-48 -mt-48"></div>
         <div className="max-w-7xl mx-auto px-4 relative z-10">
@@ -432,7 +470,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
              {displayImages.map((img, i) => (
                <div key={img.id || i} className={`group cursor-pointer relative overflow-hidden rounded-[2rem] shadow-xl transition-all duration-700 hover:-translate-y-2 ${i % 3 === 0 ? 'h-72' : 'h-48'}`} onClick={() => setSelectedImage(img.src)}>
-                 <img src={img.src} alt={img.name || img.alt} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" />
+                 <img src={img.src} alt={img.name || `ภาพบรรยากาศค่ายลูกเสืออนุสรณ์ศุภมาศ ${i+1}`} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" />
                  
                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
                     <p className="text-white text-lg md:text-xl font-black tracking-wide mb-2 drop-shadow-md leading-tight">
@@ -514,10 +552,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. Contact & Map Section */}
+      {/* 10. Contact & Map Section (ปรับปรุงให้มี Thumbnail Map) */}
       <section id="contact" className="py-24 scroll-mt-20 overflow-hidden bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+            {/* ซ้าย: ข้อมูลติดต่อ */}
             <div className="space-y-12">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 text-orange-600 font-black uppercase text-xs tracking-[0.3em] mb-4"><Navigation className="w-4 h-4" /> Get in Touch</div>
@@ -536,13 +575,37 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="space-y-8">
-              <div className="relative bg-white p-4 rounded-[3.5rem] shadow-2xl border border-slate-100 overflow-hidden group">
-                <div className="bg-slate-200 w-full h-[450px] rounded-[2.5rem] overflow-hidden relative">
+            {/* ขวา: แผนที่ Google Map แบบเต็ม + Thumbnail แผนที่วาด */}
+            <div className="space-y-6">
+              <div className="relative bg-white p-4 rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden group h-[500px]">
+                
+                {/* 🗺️ Google Map เต็มพื้นที่ */}
+                <div className="bg-slate-200 w-full h-full rounded-[2.5rem] overflow-hidden relative z-0">
                   <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.3332011746957!2d99.57713877516328!3d13.758768997131973!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e314250c5a6003%3A0x591426503e1ce901!2z4LiE4LmI4Liy4Lii4Lil4Li54LiB4LmA4Liq4Li34Lit4Lit4LiZ4Li44Liq4Lij4LiT4LmM4Lio4Li44Lig4Lih4Liy4LioIOC4iC7guKPguLLguIrguJrguLjguKPguLUt4LiB4Liy4LiN4LiI4LiZ4Lia4Li44Lij4Li1!5e0!3m2!1sth!2sth!4v1772644912554!5m2!1sth!2sth" className="w-full h-full border-0 grayscale hover:grayscale-0 transition-all duration-700" allowFullScreen loading="lazy" title="Google Maps"></iframe>
                 </div>
+
+                {/* 🗺️ Thumbnail แผนที่ภาพวาด (ลอยทับอยู่มุมขวาล่าง) */}
+                <div 
+                  className="absolute bottom-8 right-8 w-40 h-40 md:w-48 md:h-48 bg-white p-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-10 cursor-zoom-in group/map transform hover:scale-105 transition-all duration-300 border-4 border-white"
+                  onClick={() => setSelectedImage('/map.jpg')} 
+                  title="คลิกเพื่อขยายแผนที่ภาพวาด"
+                >
+                  <div className="w-full h-full rounded-[1.5rem] overflow-hidden relative">
+                    <img src="/map.jpg" alt="แผนที่ภาพวาดค่ายลูกเสือ" className="w-full h-full object-cover group-hover/map:scale-110 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center opacity-0 group-hover/map:opacity-100 transition-opacity">
+                      <ZoomIn className="w-8 h-8 text-white drop-shadow-md mb-1" />
+                      <span className="text-white text-[10px] font-black uppercase tracking-widest drop-shadow-md">คลิกเพื่อซูม</span>
+                    </div>
+                  </div>
+                  {/* ป้ายเตือนเล็กๆ (Pulse) */}
+                  <div className="absolute -top-3 -left-3 bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                </div>
+
               </div>
             </div>
+
           </div>
         </div>
       </section>
