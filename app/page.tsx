@@ -142,7 +142,7 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
     "name": "ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี",
-    "alternateName": "ค่ายศุภมาศ",
+    "alternateName": "ค่ายอนุสรณ์ศุภมาศ",
     "description": "ศูนย์ฝึกอบรมเยาวชนและค่ายลูกเสือที่ได้มาตรฐานที่สุดในจังหวัดราชบุรี กิจกรรมผจญภัยครบครัน ปลอดภัย 100%",
     "url": "https://www.suppamascamp.me", 
     "telephone": "+66865515110",
