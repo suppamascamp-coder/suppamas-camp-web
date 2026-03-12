@@ -3,38 +3,70 @@ import React, { useState, useEffect } from 'react';
 import { 
   Compass, Flame, Users, CheckCircle2, 
   ShieldCheck, BedDouble, Utensils, AlertCircle,
-  ArrowRight, Image as ImageIcon, Navigation, Heart,
+  ArrowRight, Image as ImageIcon, MapPin, Navigation, Heart,
   Phone, Facebook, MessageCircle, Clock, UserCheck, Award,
-  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map
+  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2
 } from 'lucide-react';
 import ActivityCard from '../src/components/ActivityCard'; 
 import GoogleReviews from '../src/components/GoogleReviews'; 
-import AdventureMapModal from '../src/components/AdventureMapModal'; // 📌 Import Component แผนที่เข้ามา
+import AdventureMapModal from '../src/components/AdventureMapModal'; 
 
+// 📌 นำเข้า Firebase เพื่อดึงข้อมูลมาโชว์หน้าแรก
 import { db } from '../src/lib/firebase';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, query, orderBy, limit } from 'firebase/firestore';
 
 export default function Home() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  
+  // ==========================================
+  // 🎯 State สำหรับเก็บข้อมูลจาก Firebase
+  // ==========================================
+  
+  // 1. ข้อมูลหน้าแรก (Hero & Stats)
+  const [homepageData, setHomepageData] = useState<any>(null);
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
   
-  // State สำหรับแกลลอรี่ทั่วไป
+  // 2. ข้อมูลแกลลอรี่
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [showAllGallery, setShowAllGallery] = useState(false);
   const [isLoadingGallery, setIsLoadingGallery] = useState(false);
 
-  // 🗺️ State สำหรับระบบ Interactive Map
+  // 3. แผนที่กิจกรรม
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
-  const heroSlides = [
-    "/1.JPG", 
-    "/2.jpg",
-    "/3.jpg",
-    "/4.JPG"
-  ];
+  // ==========================================
+  // 🔄 ดึงข้อมูลทั้งหมดเมื่อเปิดหน้าเว็บ
+  // ==========================================
+  useEffect(() => {
+    // 1. ดึงข้อมูลหน้าแรก (Homepage Settings)
+    const fetchHomepageData = async () => {
+      try {
+        const docRef = doc(db, "settings", "homepage");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setHomepageData(docSnap.data());
+        }
+      } catch (error) {
+        console.error("Error fetching homepage data:", error);
+      }
+    };
+    fetchHomepageData();
+  }, []);
 
+  // ระบบเปลี่ยนรูปสไลด์อัตโนมัติ
+  useEffect(() => {
+    if (!homepageData?.slides || homepageData.slides.length === 0) return;
+    
+    const slideInterval = setInterval(() => {
+      setCurrentHeroSlide((prev) => (prev + 1) % homepageData.slides.length);
+    }, 5000); // เปลี่ยนทุก 5 วินาที
+    
+    return () => clearInterval(slideInterval);
+  }, [homepageData?.slides]);
+
+  // ดึงข้อมูลแกลลอรี่
   useEffect(() => {
     const fetchGallery = async () => {
       setIsLoadingGallery(true);
@@ -59,13 +91,7 @@ export default function Home() {
     fetchGallery();
   }, [showAllGallery]);
 
-  useEffect(() => {
-    const slideInterval = setInterval(() => {
-      setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
-    return () => clearInterval(slideInterval);
-  }, [heroSlides.length]);
-
+  // ระบบแสดงปุ่มเลื่อนขึ้นบนสุด
   useEffect(() => {
     const handleScroll = () => {
       setShowBackToTop(window.scrollY > 500);
@@ -73,6 +99,31 @@ export default function Home() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // ==========================================
+  // 🛡️ ข้อมูลสำรอง (Fallback Data)
+  // ถ้าดึงข้อมูลจาก Firebase ไม่ได้ หรือยังไม่ได้ตั้งค่า จะใช้ข้อมูลชุดนี้แทน
+  // ==========================================
+  const fallbackHeroSlides = [
+    "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=2000",
+    "https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=2000"
+  ];
+
+  const defaultTexts = {
+    badge: 'เปิดรับจองรอบปีการศึกษา 2569 แล้ว',
+    title: 'ค่ายลูกเสือ อนุสรณ์ศุภมาศ ราชบุรี',
+    subtitle: 'ศูนย์ฝึกอบรมเยาวชนที่เน้นความปลอดภัยและคุณภาพอาหาร สร้างวินัยผ่านความสุข ในบรรยากาศธรรมชาติที่สมบูรณ์ที่สุด',
+    stat1Val: '15+', stat1Label: 'ปีแห่งประสบการณ์',
+    stat2Val: '20+', stat2Label: 'ฐานกิจกรรมผจญภัย',
+    stat3Val: '600', stat3Label: 'ความจุเรือนนอน (คน)',
+    stat4Val: '100%', stat4Label: 'มาตรฐานความปลอดภัย',
+  };
+
+  const displaySlides = homepageData?.slides?.length > 0 
+    ? homepageData.slides.map((s: any) => s.url) 
+    : fallbackHeroSlides;
+    
+  const displayTexts = homepageData?.texts || defaultTexts;
 
   const fallbackImages = [
     { src: "https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=1000", name: "ฐานผจญภัยลูกเสือ", category: "กิจกรรม" },
@@ -93,10 +144,11 @@ export default function Home() {
 
   return (
     <div className="relative font-sans antialiased text-slate-900 bg-white">
-      {/* 1. Hero Section */}
+      
+      {/* 1. Hero Section - ดึงรูปภาพและข้อความจาก Firebase */}
       <section id="home" className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden pt-20 pb-12">
         <div className="absolute inset-0 z-0">
-          {heroSlides.map((slide, index) => (
+          {displaySlides.map((slideUrl: string, index: number) => (
             <div
               key={index}
               className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${
@@ -104,7 +156,7 @@ export default function Home() {
               }`}
             >
               <img 
-                src={slide} 
+                src={slideUrl} 
                 alt={`Hero Slide ${index + 1}`} 
                 className="w-full h-full object-cover transition-transform duration-[10000ms]"
               />
@@ -112,8 +164,9 @@ export default function Home() {
           ))}
           <div className="absolute inset-0 bg-green-950/70 mix-blend-multiply"></div>
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80"></div>
+          
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-            {heroSlides.map((_, i) => (
+            {displaySlides.map((_: any, i: number) => (
               <button 
                 key={i} 
                 onClick={() => setCurrentHeroSlide(i)}
@@ -124,9 +177,30 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto w-full">
-          <span className="inline-block py-1 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-4 backdrop-blur-sm animate-pulse uppercase tracking-[0.2em]">WELCOME || เปิดให้จองแล้ววันนี้!!</span>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl leading-tight">ค่ายลูกเสือ <br className="hidden md:block" /> <span className="text-orange-500 italic">อนุสรณ์ศุภมาศ ราชบุรี</span></h1>
-          <p className="text-base md:text-xl lg:text-2xl text-gray-200 mb-8 drop-shadow-md max-w-3xl mx-auto font-light leading-relaxed">ศูนย์ฝึกอบรมเยาวชนที่เน้นความปลอดภัยและคุณภาพอาหาร <br className="hidden md:block" />สร้างวินัยผ่านความสุข ในบรรยากาศธรรมชาติที่สมบูรณ์ที่สุด</p>
+          <span className="inline-block py-1 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-4 backdrop-blur-sm animate-pulse uppercase tracking-[0.2em]">
+            {displayTexts.badge}
+          </span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl leading-tight">
+            {/* 🌟 ฟังก์ชันแยกคำเพื่อใส่สีส้มให้ท่อนหลังอัตโนมัติ */}
+            {(() => {
+              const titleStr = displayTexts.title || '';
+              const firstSpaceIndex = titleStr.indexOf(' ');
+              if (firstSpaceIndex === -1) return titleStr; // ถ้าไม่มีเว้นวรรค ให้แสดงปกติ
+              
+              const firstPart = titleStr.substring(0, firstSpaceIndex);
+              const secondPart = titleStr.substring(firstSpaceIndex + 1);
+              
+              return (
+                <>
+                  {firstPart} <br className="hidden md:block" />
+                  <span className="text-orange-500 italic">{secondPart}</span>
+                </>
+              );
+            })()}
+          </h1>
+          <p className="text-base md:text-xl lg:text-2xl text-gray-200 mb-8 drop-shadow-md max-w-3xl mx-auto font-light leading-relaxed">
+            {displayTexts.subtitle}
+          </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a href="#packages" className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-xl text-center">จองค่าย/ดูราคา</a>
             <a href="#about" className="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/40 text-white px-10 py-4 rounded-full font-bold text-lg transition-all text-center">ทำความรู้จักเรา</a>
@@ -134,17 +208,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Trust Bar */}
+      {/* 2. Trust Bar - ดึงตัวเลขสถิติจาก Firebase */}
       <section className="relative z-20 -mt-10 md:-mt-20 max-w-6xl mx-auto px-4">
         <div className="bg-white rounded-[2rem] shadow-2xl p-6 md:p-10 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 border-b-8 border-orange-500">
           {[
-            { label: "ปีแห่งประสบการณ์", val: "12+", color: "text-green-800" },
-            { label: "ฐานกิจกรรมผจญภัย", val: "17+", color: "text-orange-500" },
-            { label: "ความจุเรือนนอน", val: "600", color: "text-green-800", unit: "คน" },
-            { label: "มาตรฐานความปลอดภัย", val: "100%", color: "text-orange-500" }
+            { label: displayTexts.stat1Label, val: displayTexts.stat1Val, color: "text-green-800" },
+            { label: displayTexts.stat2Label, val: displayTexts.stat2Val, color: "text-orange-500" },
+            { label: displayTexts.stat3Label, val: displayTexts.stat3Val, color: "text-green-800" },
+            { label: displayTexts.stat4Label, val: displayTexts.stat4Val, color: "text-orange-500" }
           ].map((item, i) => (
             <div key={i} className={`text-center ${i !== 0 ? 'border-l border-gray-100' : ''}`}>
-              <div className={`text-2xl md:text-4xl font-black ${item.color}`}>{item.val} <span className="text-sm">{item.unit}</span></div>
+              <div className={`text-2xl md:text-4xl font-black ${item.color}`}>{item.val}</div>
               <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-tighter mt-1">{item.label}</div>
             </div>
           ))}
@@ -218,7 +292,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Activities Section (เพิ่มปุ่มแผนที่บนการ์ดใบแรก) */}
+      {/* 5. Activities Section */}
       <section id="activities" className="py-24 scroll-mt-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 text-center md:text-left">
@@ -350,7 +424,7 @@ export default function Home() {
               </div>
               <ul className="space-y-4 flex-1 mb-8">
                 {["กิจกรรมบุกเบิก / ผจญภัย", "ประกอบอาหาร / สูทกรรม", "กิจกรรมรอบกองไฟ", "เดินทางไกล / สำรวจ", "อาหาร 4 มื้อ + ที่พัก 1 คืน", "พยาบาลประจำ 24 ชม."].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-sm font-bold text-slate-600"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" /> {item}</li>
+                  <li key={idx} className="flex items-start gap-3 text-sm font-bold text-slate-600"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" /> {item}</li>
                 ))}
               </ul>
             </div>
@@ -482,6 +556,23 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 11. Google Reviews Section */}
+      <GoogleReviews />
+
+      {/* 12. Final Call to Action Section */}
+      <section className="py-32 bg-orange-500 relative overflow-hidden text-center">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-white/20 rounded-full -translate-x-1/2 -translate-y-1/2 blur-[120px]"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-green-950/20 rounded-full translate-x-1/3 translate-y-1/3 blur-[120px]"></div>
+        <div className="max-w-4xl mx-auto px-4 relative z-10 text-white">
+          <h2 className="text-5xl md:text-8xl font-black mb-12 tracking-tighter italic uppercase underline decoration-green-950/40 decoration-[16px] underline-offset-[-10px]">Adventure Calls!</h2>
+          <p className="text-2xl md:text-3xl font-light mb-16 italic opacity-90 leading-relaxed font-bold">พานักเรียนมาสัมผัสความหมายของคำว่า "ศุภมาศ" <br />สนุก ปลอดภัย อิ่มท้อง และมีความสุขที่สุด</p>
+          <div className="flex flex-col sm:flex-row gap-8 justify-center">
+            <a href="https://line.me/ti/p/vLpgOF-XSu" target="_blank" rel="noreferrer" className="bg-white text-orange-600 hover:bg-gray-100 px-16 py-6 rounded-[2.5rem] font-black text-2xl transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4"><MessageCircle className="w-8 h-8 fill-orange-600" /> สอบถามผ่าน LINE</a>
+            <a href="tel:0865515110" className="bg-transparent border-4 border-white hover:bg-white/10 text-white px-16 py-6 rounded-[2.5rem] font-black text-2xl transition-all flex items-center justify-center gap-4 shadow-xl"><Phone className="w-8 h-8" /> โทรหาฝ่ายจอง</a>
           </div>
         </div>
       </section>

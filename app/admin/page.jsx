@@ -4,13 +4,14 @@ import {
   LayoutDashboard, Home, Tent, Package, CalendarDays, 
   Image as ImageIcon, Settings, Menu, X, Bell, Plus, 
   Trash2, Search, TrendingUp, Users, Upload, Eye, 
-  Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit
+  Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit, Save, Type
 } from 'lucide-react';
 
 import { db, storage, auth } from '../../src/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+// 📌 เพิ่ม getDoc, setDoc เข้ามาเพื่อใช้ในหน้าจัดการหน้าแรก
+import { collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
 // ============================================================================
 // 🗜️ ฟังก์ชันบีบอัดรูปภาพอัจฉริยะ (Image Compression Utility)
@@ -72,7 +73,8 @@ export default function AdminPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
 
-  const [activeTab, setActiveTab] = useState('activities'); 
+  // 📌 เปลี่ยนค่าเริ่มต้นเป็น 'homepage' เพื่อให้คุณครูเปิดมาเห็นหน้านี้เลย
+  const [activeTab, setActiveTab] = useState('homepage'); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
@@ -201,6 +203,232 @@ export default function AdminPage() {
       </div>
     </div>
   );
+
+  // ==========================================
+  // 🎯 VIEW: จัดการหน้าแรก (Homepage Management)
+  // ==========================================
+  const HomepageView = () => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+
+    // ข้อมูลข้อความและสถิติ
+    const [texts, setTexts] = useState({
+      badge: 'เปิดรับจองรอบปีการศึกษา 2569 แล้ว',
+      title: 'ค่ายลูกเสือ อนุสรณ์ศุภมาศ ราชบุรี',
+      subtitle: 'ศูนย์ฝึกอบรมเยาวชนที่เน้นความปลอดภัยและคุณภาพอาหาร สร้างวินัยผ่านความสุข ในบรรยากาศธรรมชาติที่สมบูรณ์ที่สุด',
+      stat1Val: '15+', stat1Label: 'ปีแห่งประสบการณ์',
+      stat2Val: '20+', stat2Label: 'ฐานกิจกรรมผจญภัย',
+      stat3Val: '600', stat3Label: 'ความจุเรือนนอน (คน)',
+      stat4Val: '100%', stat4Label: 'มาตรฐานความปลอดภัย',
+    });
+
+    // ข้อมูลรูปภาพสไลด์โชว์
+    const [slides, setSlides] = useState([]);
+    const fileInputRef = useRef(null);
+
+    // ดึงข้อมูลจาก Firestore เมื่อเปิดหน้านี้
+    useEffect(() => {
+      const fetchHomepageData = async () => {
+        try {
+          const docRef = doc(db, "settings", "homepage");
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.texts) setTexts(data.texts);
+            if (data.slides) setSlides(data.slides);
+          }
+        } catch (error) {
+          console.error("Error fetching homepage settings:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchHomepageData();
+    }, []);
+
+    // ฟังก์ชันบันทึกข้อความ
+    const handleSaveTexts = async (e) => {
+      e.preventDefault();
+      setIsSaving(true);
+      try {
+        await setDoc(doc(db, "settings", "homepage"), { texts: texts }, { merge: true });
+        alert("บันทึกข้อความเรียบร้อยแล้ว!");
+      } catch (error) {
+        console.error("Error saving texts:", error);
+        alert("เกิดข้อผิดพลาดในการบันทึก");
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    // ฟังก์ชันอัปโหลดรูปสไลด์ (บีบอัดเป็น 1920px สำหรับ Full HD)
+    const handleSlideUpload = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      try {
+        // ใช้ 1920px เพราะเป็นรูปพื้นหลังจอใหญ่
+        const compressedFile = await compressImage(file, 1920, 0.8);
+        
+        const storageRef = ref(storage, `hero_slides/${Date.now()}_${file.name}`);
+        const uploadTask = await uploadBytesResumable(storageRef, compressedFile);
+        const downloadURL = await getDownloadURL(uploadTask.ref);
+
+        const newSlide = {
+          url: downloadURL,
+          storagePath: uploadTask.ref.fullPath,
+          createdAt: new Date().toISOString()
+        };
+
+        const updatedSlides = [...slides, newSlide];
+        
+        // เซฟลง Firestore ทันที
+        await setDoc(doc(db, "settings", "homepage"), { slides: updatedSlides }, { merge: true });
+        setSlides(updatedSlides);
+        
+      } catch (error) {
+        console.error("Upload error:", error);
+        alert("อัปโหลดไม่สำเร็จ กรุณาลองใหม่");
+      } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+
+    // ฟังก์ชันลบรูปสไลด์
+    const handleDeleteSlide = async (index, storagePath) => {
+      if (window.confirm("ยืนยันการลบภาพสไลด์นี้?")) {
+        try {
+          const updatedSlides = slides.filter((_, i) => i !== index);
+          await setDoc(doc(db, "settings", "homepage"), { slides: updatedSlides }, { merge: true });
+          
+          if (storagePath) {
+            const fileRef = ref(storage, storagePath);
+            await deleteObject(fileRef);
+          }
+          
+          setSlides(updatedSlides);
+        } catch (error) {
+          console.error("Delete error:", error);
+          alert("ลบไม่สำเร็จ");
+        }
+      }
+    };
+
+    if (isLoading) {
+      return <div className="flex justify-center items-center h-64"><Loader2 className="w-10 h-10 animate-spin text-orange-500" /></div>;
+    }
+
+    return (
+      <div className="space-y-10 animate-in fade-in duration-500">
+        <div>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight uppercase italic underline decoration-orange-500 decoration-4 underline-offset-8">จัดการหน้าแรก</h2>
+          <p className="text-slate-400 text-sm mt-3 font-medium">ปรับแต่งข้อความต้อนรับ ตัวเลขสถิติ และรูปภาพสไลด์โชว์พื้นหลัง</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* 📝 ส่วนจัดการข้อความ (Hero Texts) */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 relative">
+            <h3 className="text-xl font-black text-green-950 mb-6 flex items-center gap-2">
+              <Type className="w-5 h-5 text-orange-500" /> ข้อความหลัก (Hero Section)
+            </h3>
+            
+            <form onSubmit={handleSaveTexts} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">ป้ายกำกับ (Badge)</label>
+                <input type="text" value={texts.badge} onChange={e => setTexts({...texts, badge: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-bold text-sm" placeholder="เช่น เปิดรับจองรอบปี..." />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">หัวข้อหลัก (Main Title)</label>
+                <input type="text" value={texts.title} onChange={e => setTexts({...texts, title: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-black text-lg text-green-950" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">คำบรรยายย่อย (Subtitle)</label>
+                <textarea rows="3" value={texts.subtitle} onChange={e => setTexts({...texts, subtitle: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-medium text-sm resize-none"></textarea>
+              </div>
+
+              <div className="border-t border-slate-100 pt-6 mt-6">
+                <h3 className="text-lg font-black text-green-950 mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-orange-500" /> ตัวเลขสถิติ (Trust Bar)
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                    <input type="text" value={texts.stat1Val} onChange={e => setTexts({...texts, stat1Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-green-800 outline-none" />
+                    <input type="text" value={texts.stat1Label} onChange={e => setTexts({...texts, stat1Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                    <input type="text" value={texts.stat2Val} onChange={e => setTexts({...texts, stat2Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-orange-500 outline-none" />
+                    <input type="text" value={texts.stat2Label} onChange={e => setTexts({...texts, stat2Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                    <input type="text" value={texts.stat3Val} onChange={e => setTexts({...texts, stat3Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-green-800 outline-none" />
+                    <input type="text" value={texts.stat3Label} onChange={e => setTexts({...texts, stat3Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                    <input type="text" value={texts.stat4Val} onChange={e => setTexts({...texts, stat4Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-orange-500 outline-none" />
+                    <input type="text" value={texts.stat4Label} onChange={e => setTexts({...texts, stat4Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" disabled={isSaving} className="w-full mt-6 bg-green-950 hover:bg-orange-500 text-white py-4 rounded-2xl font-black transition-all shadow-xl flex items-center justify-center gap-2">
+                {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} บันทึกข้อความและสถิติ
+              </button>
+            </form>
+          </div>
+
+          {/* 🖼️ ส่วนจัดการรูปภาพสไลด์ (Slideshow) */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-black text-green-950 flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-orange-500" /> ภาพพื้นหลัง (Slideshow)
+              </h3>
+              
+              <input type="file" accept="image/*" ref={fileInputRef} onChange={handleSlideUpload} className="hidden" />
+              <button 
+                onClick={() => fileInputRef.current.click()} 
+                disabled={isUploading}
+                className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors disabled:opacity-50"
+              >
+                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} 
+                {isUploading ? 'กำลังอัปโหลด...' : 'เพิ่มรูปภาพ'}
+              </button>
+            </div>
+
+            {slides.length === 0 ? (
+              <div className="text-center py-16 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 text-slate-400">
+                <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="font-bold text-sm">ยังไม่มีรูปภาพสไลด์</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {slides.map((slide, index) => (
+                  <div key={index} className="relative group rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[4/3] bg-slate-100">
+                    <img src={slide.url} alt={`Slide ${index}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button 
+                        onClick={() => handleDeleteSlide(index, slide.storagePath)}
+                        className="bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600 hover:scale-110 transition-all shadow-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-black px-2 py-1 rounded-md backdrop-blur-sm">
+                      #{index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-slate-400 mt-6 italic">* ระบบจะสลับรูปภาพพื้นหลังตามลำดับนี้โดยอัตโนมัติ (แนะนำภาพแนวนอน)</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // ==========================================
   // 🎯 VIEW: จัดการฐานกิจกรรม (Activities)
@@ -807,10 +1035,12 @@ export default function AdminPage() {
         <main className="flex-1 overflow-y-auto bg-slate-50/50 p-10 custom-scrollbar">
           <div className="max-w-7xl mx-auto pb-20">
             {activeTab === 'dashboard' && <DashboardView />}
+            {activeTab === 'homepage' && <HomepageView />}
             {activeTab === 'gallery' && <GalleryView />}
             {activeTab === 'activities' && <ActivitiesView />}
             
-            {['homepage', 'packages', 'bookings', 'settings'].includes(activeTab) && (
+            {/* โชว์กรอบกำลังพัฒนาเฉพาะเมนูที่ยังไม่ได้ทำ */}
+            {['packages', 'bookings', 'settings'].includes(activeTab) && (
               <div className="flex flex-col items-center justify-center min-h-[500px] border-4 border-dashed border-slate-100 rounded-[4rem] bg-white/50 text-slate-300 group hover:border-orange-500/20 transition-all">
                 <div className="p-10 bg-white rounded-[2.5rem] shadow-2xl mb-8 group-hover:scale-110 transition-transform shadow-slate-200/50"><Settings className="w-16 h-16 text-slate-200 animate-spin-slow" /></div>
                 <h3 className="text-3xl font-black text-slate-400 mb-2 uppercase italic tracking-tighter">Feature In Development</h3>
