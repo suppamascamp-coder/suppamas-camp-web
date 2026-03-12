@@ -5,7 +5,7 @@ import {
   ShieldCheck, BedDouble, Utensils, AlertCircle,
   ArrowRight, Image as ImageIcon, MapPin, Navigation, Heart,
   Phone, Facebook, MessageCircle, Clock, UserCheck, Award,
-  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2
+  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles
 } from 'lucide-react';
 import ActivityCard from '../src/components/ActivityCard'; 
 import GoogleReviews from '../src/components/GoogleReviews'; 
@@ -23,24 +23,19 @@ export default function Home() {
   // ==========================================
   // 🎯 State สำหรับเก็บข้อมูลจาก Firebase
   // ==========================================
-  
-  // 1. ข้อมูลหน้าแรก (Hero & Stats)
   const [homepageData, setHomepageData] = useState<any>(null);
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
   
-  // 2. ข้อมูลแกลลอรี่
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [showAllGallery, setShowAllGallery] = useState(false);
   const [isLoadingGallery, setIsLoadingGallery] = useState(false);
 
-  // 3. แผนที่กิจกรรม
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   // ==========================================
   // 🔄 ดึงข้อมูลทั้งหมดเมื่อเปิดหน้าเว็บ
   // ==========================================
   useEffect(() => {
-    // 1. ดึงข้อมูลหน้าแรก (Homepage Settings)
     const fetchHomepageData = async () => {
       try {
         const docRef = doc(db, "settings", "homepage");
@@ -55,18 +50,14 @@ export default function Home() {
     fetchHomepageData();
   }, []);
 
-  // ระบบเปลี่ยนรูปสไลด์อัตโนมัติ
   useEffect(() => {
     if (!homepageData?.slides || homepageData.slides.length === 0) return;
-    
     const slideInterval = setInterval(() => {
       setCurrentHeroSlide((prev) => (prev + 1) % homepageData.slides.length);
-    }, 5000); // เปลี่ยนทุก 5 วินาที
-    
+    }, 5000); 
     return () => clearInterval(slideInterval);
   }, [homepageData?.slides]);
 
-  // ดึงข้อมูลแกลลอรี่
   useEffect(() => {
     const fetchGallery = async () => {
       setIsLoadingGallery(true);
@@ -91,18 +82,14 @@ export default function Home() {
     fetchGallery();
   }, [showAllGallery]);
 
-  // ระบบแสดงปุ่มเลื่อนขึ้นบนสุด
   useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 500);
-    };
+    const handleScroll = () => setShowBackToTop(window.scrollY > 500);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // ==========================================
   // 🛡️ ข้อมูลสำรอง (Fallback Data)
-  // ถ้าดึงข้อมูลจาก Firebase ไม่ได้ หรือยังไม่ได้ตั้งค่า จะใช้ข้อมูลชุดนี้แทน
   // ==========================================
   const fallbackHeroSlides = [
     "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=2000",
@@ -117,13 +104,23 @@ export default function Home() {
     stat2Val: '20+', stat2Label: 'ฐานกิจกรรมผจญภัย',
     stat3Val: '600', stat3Label: 'ความจุเรือนนอน (คน)',
     stat4Val: '100%', stat4Label: 'มาตรฐานความปลอดภัย',
+    activityTitle: 'HIGH-IMPACT ACTIVITIES',
+    activitySubtitle: '"สนุก ท้าทาย ได้ทักษะชีวิตที่แท้จริง"'
   };
 
-  const displaySlides = homepageData?.slides?.length > 0 
-    ? homepageData.slides.map((s: any) => s.url) 
-    : fallbackHeroSlides;
-    
-  const displayTexts = homepageData?.texts || defaultTexts;
+  // ชุดข้อมูล 4 การ์ด (กรณี Firebase ยังไม่มีข้อมูล)
+  const defaultCards = [
+    { title: 'ฐานกิจกรรมผจญภัย', desc: 'ทดสอบความกล้ากับสไลเดอร์น้ำสูง 10 เมตร, โดดหอ และฐานเชือกกว่า 10 รูปแบบ', img: 'https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=800' },
+    { title: 'กิจกรรมรอบกองไฟ', desc: 'ลานกิจกรรมมาตรฐานจุได้ 1-600 คน พร้อมระบบแสงสีเสียงเต็มรูปแบบ และบริการ LIVE Streaming ให้ผู้ปกครองดูจากที่บ้าน', img: 'https://images.unsplash.com/photo-1504280655536-2605761a54dc?auto=format&fit=crop&q=80&w=800' },
+    { title: 'ทักษะชีวิตและทีมเวิร์ค', desc: 'วิชาประกอบอาหาร (สูทกรรม), ปฐมพยาบาล และการแก้ปัญหาร่วมกันผ่านเกมสถานการณ์จำลอง', img: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&q=80&w=800' },
+    { title: 'กิจกรรมใหม่ล่าสุด', desc: 'ฐานกิจกรรมใหม่ที่ออกแบบมาเพื่อเสริมสร้างจินตนาการและการเรียนรู้อย่างสร้างสรรค์', img: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=800' }
+  ];
+
+  const displaySlides = homepageData?.slides?.length > 0 ? homepageData.slides.map((s: any) => s.url) : fallbackHeroSlides;
+  const displayTexts = homepageData?.texts ? { ...defaultTexts, ...homepageData.texts } : defaultTexts;
+  
+  // ให้ดึงข้อมูล 4 การ์ด ถ้าใน Firebase มี 4 การ์ด ถ้าไม่มีให้ใช้ default
+  const displayCards = homepageData?.highlightCards?.length === 4 ? homepageData.highlightCards : defaultCards;
 
   const fallbackImages = [
     { src: "https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=1000", name: "ฐานผจญภัยลูกเสือ", category: "กิจกรรม" },
@@ -131,7 +128,6 @@ export default function Home() {
     { src: "https://images.unsplash.com/photo-1504280655536-2605761a54dc?auto=format&fit=crop&q=80&w=1000", name: "กองไฟและการแสดง", category: "กิจกรรม" },
     { src: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&q=80&w=1000", name: "กิจกรรมกลุ่มเยาวชน", category: "กิจกรรม" }
   ];
-
   const displayImages = galleryImages.length > 0 ? galleryImages : fallbackImages;
 
   const faqs = [
@@ -145,7 +141,7 @@ export default function Home() {
   return (
     <div className="relative font-sans antialiased text-slate-900 bg-white">
       
-      {/* 1. Hero Section - ดึงรูปภาพและข้อความจาก Firebase */}
+      {/* 1. Hero Section */}
       <section id="home" className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden pt-20 pb-12">
         <div className="absolute inset-0 z-0">
           {displaySlides.map((slideUrl: string, index: number) => (
@@ -155,11 +151,7 @@ export default function Home() {
                 index === currentHeroSlide ? 'opacity-100 scale-105' : 'opacity-0 scale-100'
               }`}
             >
-              <img 
-                src={slideUrl} 
-                alt={`Hero Slide ${index + 1}`} 
-                className="w-full h-full object-cover transition-transform duration-[10000ms]"
-              />
+              <img src={slideUrl} alt={`Hero Slide ${index + 1}`} className="w-full h-full object-cover transition-transform duration-[10000ms]" />
             </div>
           ))}
           <div className="absolute inset-0 bg-green-950/70 mix-blend-multiply"></div>
@@ -167,11 +159,7 @@ export default function Home() {
           
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-20">
             {displaySlides.map((_: any, i: number) => (
-              <button 
-                key={i} 
-                onClick={() => setCurrentHeroSlide(i)}
-                className={`h-1.5 transition-all duration-500 rounded-full ${i === currentHeroSlide ? 'w-8 bg-orange-500' : 'w-2 bg-white/30 hover:bg-white/50'}`}
-              />
+              <button key={i} onClick={() => setCurrentHeroSlide(i)} className={`h-1.5 transition-all duration-500 rounded-full ${i === currentHeroSlide ? 'w-8 bg-orange-500' : 'w-2 bg-white/30 hover:bg-white/50'}`} />
             ))}
           </div>
         </div>
@@ -181,11 +169,10 @@ export default function Home() {
             {displayTexts.badge}
           </span>
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl leading-tight">
-            {/* 🌟 ฟังก์ชันแยกคำเพื่อใส่สีส้มให้ท่อนหลังอัตโนมัติ */}
             {(() => {
               const titleStr = displayTexts.title || '';
               const firstSpaceIndex = titleStr.indexOf(' ');
-              if (firstSpaceIndex === -1) return titleStr; // ถ้าไม่มีเว้นวรรค ให้แสดงปกติ
+              if (firstSpaceIndex === -1) return titleStr;
               
               const firstPart = titleStr.substring(0, firstSpaceIndex);
               const secondPart = titleStr.substring(firstSpaceIndex + 1);
@@ -208,7 +195,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Trust Bar - ดึงตัวเลขสถิติจาก Firebase */}
+      {/* 2. Trust Bar */}
       <section className="relative z-20 -mt-10 md:-mt-20 max-w-6xl mx-auto px-4">
         <div className="bg-white rounded-[2rem] shadow-2xl p-6 md:p-10 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 border-b-8 border-orange-500">
           {[
@@ -225,20 +212,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. About & Organizational Info */}
+      {/* 3. About */}
       <section id="about" className="py-24 scroll-mt-20 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative group">
               <div className="absolute -inset-4 bg-green-100 rounded-[3rem] -rotate-3 transition-transform group-hover:rotate-0 duration-500"></div>
-              <img 
-                src="/about-us.jpg" 
-                alt="บรรยากาศค่ายอนุสรณ์ศุภมาศ" 
-                className="rounded-[2.5rem] shadow-2xl relative z-10 w-full h-[550px] object-cover" 
-              />
-              <div className="absolute top-6 left-6 bg-orange-500 text-white p-4 rounded-2xl z-20 shadow-lg font-black italic">
-                - SINCE 2014 -
-              </div>
+              <img src="/about-us.jpg" alt="บรรยากาศค่ายอนุสรณ์ศุภมาศ" className="rounded-[2.5rem] shadow-2xl relative z-10 w-full h-[550px] object-cover" />
+              <div className="absolute top-6 left-6 bg-orange-500 text-white p-4 rounded-2xl z-20 shadow-lg font-black italic">- SINCE 2014 -</div>
             </div>
 
             <div className="space-y-8">
@@ -292,53 +273,57 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Activities Section */}
+      {/* 5. 🌟 Activities Section (ปรับเป็น 4 การ์ด ตามข้อมูลล่าสุด) 🌟 */}
       <section id="activities" className="py-24 scroll-mt-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 text-center md:text-left">
              <div>
-                <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-4 tracking-tighter uppercase">High-Impact Activities</h2>
-                <p className="text-orange-500 text-lg font-bold italic">"สนุก ท้าทาย ได้ทักษะชีวิตที่แท้จริง"</p>
+                <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-4 tracking-tighter uppercase">{displayTexts.activityTitle}</h2>
+                <p className="text-orange-500 text-lg font-bold italic">{displayTexts.activitySubtitle}</p>
              </div>
              <button onClick={() => {
                  document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' });
              }} className="text-green-800 font-bold border-b-2 border-green-800 pb-1 hover:text-orange-500 hover:border-orange-500 transition-all flex items-center gap-2 mx-auto md:mx-0">ดูรูปกิจกรรมทั้งหมดในแกลลอรี่ <ArrowRight className="w-4 h-4" /></button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* การ์ดที่ 1: ฐานผจญภัย (เมื่อกดจะเปิด Interactive Map) */}
-            <div className="group rounded-[2.5rem] overflow-hidden bg-white shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 relative">
-              <div className="relative h-64 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=800" alt="ฐานกิจกรรมผจญภัย" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+          {/* ปรับ Layout ให้เป็น grid 4 คอลัมน์ สำหรับจอใหญ่ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* การ์ดใบที่ 1 (ใบนี้มีปุ่มกดเปิดแผนที่) */}
+            <div className="group rounded-[2.5rem] overflow-hidden bg-white shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 relative flex flex-col">
+              <div className="relative h-64 overflow-hidden shrink-0">
+                <img src={displayCards[0].img} alt={displayCards[0].title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-green-950/90 via-black/20 to-transparent"></div>
                 <Compass className="absolute bottom-6 left-6 w-10 h-10 text-orange-400 drop-shadow-md" />
               </div>
-              <div className="p-8">
-                <h3 className="text-2xl font-black text-slate-800 mb-3 group-hover:text-green-800 transition-colors">ฐานกิจกรรมผจญภัย</h3>
-                <p className="text-slate-500 mb-8 leading-relaxed font-medium">ทดสอบความกล้ากับสไลเดอร์น้ำ, โดดหอ และฐานเชือกกว่า 10 รูปแบบ</p>
-                {/* 🗺️ ปุ่มกดเปิด Interactive Map */}
-                <button 
-                  onClick={() => setIsMapModalOpen(true)}
-                  className="w-full py-4 rounded-2xl font-black bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center gap-2"
-                >
-                  <Map className="w-5 h-5" /> ดูแผนที่ฐานกิจกรรม
+              <div className="p-8 flex flex-col flex-1">
+                <h3 className="text-2xl font-black text-slate-800 mb-3 group-hover:text-green-800 transition-colors">{displayCards[0].title}</h3>
+                <p className="text-slate-500 mb-8 leading-relaxed font-medium flex-1">{displayCards[0].desc}</p>
+                <button onClick={() => setIsMapModalOpen(true)} className="w-full py-4 rounded-2xl font-black bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center gap-2 shrink-0">
+                  <Map className="w-5 h-5" /> ดูแผนที่ฐาน
                 </button>
               </div>
             </div>
 
-            {/* การ์ด 2 */}
+            {/* การ์ดใบที่ 2 */}
             <ActivityCard 
-              title="กิจกรรมรอบกองไฟ" 
-              description="ลานกิจกรรมมาตรฐานจุได้ 1-600 คน พร้อมระบบแสงสีเสียงเต็มรูปแบบ และบริการ LIVE Streaming ให้ผู้ปกครองดูจากที่บ้าน" 
-              image="https://images.unsplash.com/photo-1504280655536-2605761a54dc?auto=format&fit=crop&q=80&w=800" 
+              title={displayCards[1].title} 
+              description={displayCards[1].desc} 
+              image={displayCards[1].img} 
               Icon={Flame} 
             />
-            {/* การ์ด 3 */}
+            {/* การ์ดใบที่ 3 */}
             <ActivityCard 
-              title="ทักษะชีวิตและทีมเวิร์ค" 
-              description="วิชาประกอบอาหาร (สูทกรรม), ปฐมพยาบาล และการแก้ปัญหาร่วมกันผ่านเกมสถานการณ์จำลอง" 
-              image="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&q=80&w=800" 
+              title={displayCards[2].title} 
+              description={displayCards[2].desc} 
+              image={displayCards[2].img} 
               Icon={Users} 
+            />
+            {/* การ์ดใบที่ 4 */}
+            <ActivityCard 
+              title={displayCards[3].title} 
+              description={displayCards[3].desc} 
+              image={displayCards[3].img} 
+              Icon={Sparkles} 
             />
           </div>
         </div>

@@ -4,13 +4,12 @@ import {
   LayoutDashboard, Home, Tent, Package, CalendarDays, 
   Image as ImageIcon, Settings, Menu, X, Bell, Plus, 
   Trash2, Search, TrendingUp, Users, Upload, Eye, 
-  Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit, Save, Type
+  Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit, Save, Type, Compass
 } from 'lucide-react';
 
 import { db, storage, auth } from '../../src/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-// 📌 เพิ่ม getDoc, setDoc เข้ามาเพื่อใช้ในหน้าจัดการหน้าแรก
 import { collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
 // ============================================================================
@@ -34,7 +33,6 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
         let width = img.width;
         let height = img.height;
 
-        // คำนวณสัดส่วนใหม่ถ้าภาพกว้างเกินไป
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
           width = maxWidth;
@@ -46,13 +44,11 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // แปลงกลับเป็น File (JPEG) คุณภาพตามที่กำหนด
         canvas.toBlob((blob) => {
           if (!blob) {
             reject(new Error('Canvas is empty'));
             return;
           }
-          // เปลี่ยนนามสกุลไฟล์เป็น .jpg เสมอเพื่อขนาดที่เล็กที่สุด
           const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
           const compressedFile = new File([blob], newFileName, {
             type: 'image/jpeg',
@@ -73,7 +69,6 @@ export default function AdminPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
 
-  // 📌 เปลี่ยนค่าเริ่มต้นเป็น 'homepage' เพื่อให้คุณครูเปิดมาเห็นหน้านี้เลย
   const [activeTab, setActiveTab] = useState('homepage'); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -100,9 +95,6 @@ export default function AdminPage() {
     }
   };
 
-  // ==========================================
-  // VIEW: หน้าจอ Login
-  // ==========================================
   if (!isAuthenticated) {
     return (
       <div className="fixed inset-0 z-[100] bg-slate-50 flex items-center justify-center p-4 overflow-hidden">
@@ -212,8 +204,8 @@ export default function AdminPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
-    // ข้อมูลข้อความและสถิติ
-    const [texts, setTexts] = useState({
+    // ข้อมูลเริ่มต้น
+    const defaultTexts = {
       badge: 'เปิดรับจองรอบปีการศึกษา 2569 แล้ว',
       title: 'ค่ายลูกเสือ อนุสรณ์ศุภมาศ ราชบุรี',
       subtitle: 'ศูนย์ฝึกอบรมเยาวชนที่เน้นความปลอดภัยและคุณภาพอาหาร สร้างวินัยผ่านความสุข ในบรรยากาศธรรมชาติที่สมบูรณ์ที่สุด',
@@ -221,13 +213,25 @@ export default function AdminPage() {
       stat2Val: '20+', stat2Label: 'ฐานกิจกรรมผจญภัย',
       stat3Val: '600', stat3Label: 'ความจุเรือนนอน (คน)',
       stat4Val: '100%', stat4Label: 'มาตรฐานความปลอดภัย',
-    });
+      activityTitle: 'HIGH-IMPACT ACTIVITIES',
+      activitySubtitle: '"สนุก ท้าทาย ได้ทักษะชีวิตที่แท้จริง"'
+    };
 
-    // ข้อมูลรูปภาพสไลด์โชว์
+    // เปลี่ยนจาก 3 การ์ด เป็น 4 การ์ด ตามที่ขอครับ!
+    const defaultCards = [
+      { title: 'ฐานกิจกรรมผจญภัย', desc: 'ทดสอบความกล้ากับสไลเดอร์น้ำสูง 10 เมตร, โดดหอ และฐานเชือกกว่า 10 รูปแบบ', img: 'https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=800' },
+      { title: 'กิจกรรมรอบกองไฟ', desc: 'ลานกิจกรรมมาตรฐานจุได้ 1-600 คน พร้อมระบบแสงสีเสียงเต็มรูปแบบ และบริการ LIVE Streaming ให้ผู้ปกครองดูจากที่บ้าน', img: 'https://images.unsplash.com/photo-1504280655536-2605761a54dc?auto=format&fit=crop&q=80&w=800' },
+      { title: 'ทักษะชีวิตและทีมเวิร์ค', desc: 'วิชาประกอบอาหาร (สูทกรรม), ปฐมพยาบาล และการแก้ปัญหาร่วมกันผ่านเกมสถานการณ์จำลอง', img: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&q=80&w=800' },
+      { title: 'กิจกรรมใหม่', desc: 'เพิ่มคำอธิบายกิจกรรมที่น่าสนใจตรงนี้...', img: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=800' } // เพิ่มการ์ดที่ 4
+    ];
+
+    const [texts, setTexts] = useState(defaultTexts);
+    const [highlightCards, setHighlightCards] = useState(defaultCards);
     const [slides, setSlides] = useState([]);
+    
     const fileInputRef = useRef(null);
 
-    // ดึงข้อมูลจาก Firestore เมื่อเปิดหน้านี้
+    // ดึงข้อมูลจาก Firestore
     useEffect(() => {
       const fetchHomepageData = async () => {
         try {
@@ -236,7 +240,16 @@ export default function AdminPage() {
           
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (data.texts) setTexts(data.texts);
+            if (data.texts) setTexts({ ...defaultTexts, ...data.texts });
+            
+            // เช็คว่าถ้าข้อมูลบน Firebase มีแค่ 3 การ์ด (ของเดิม) ให้เพิ่มการ์ดที่ 4 เข้าไปอัตโนมัติ
+            if (data.highlightCards) {
+               if(data.highlightCards.length === 3) {
+                  setHighlightCards([...data.highlightCards, defaultCards[3]]);
+               } else {
+                  setHighlightCards(data.highlightCards);
+               }
+            }
             if (data.slides) setSlides(data.slides);
           }
         } catch (error) {
@@ -248,31 +261,59 @@ export default function AdminPage() {
       fetchHomepageData();
     }, []);
 
-    // ฟังก์ชันบันทึกข้อความ
     const handleSaveTexts = async (e) => {
       e.preventDefault();
       setIsSaving(true);
       try {
-        await setDoc(doc(db, "settings", "homepage"), { texts: texts }, { merge: true });
-        alert("บันทึกข้อความเรียบร้อยแล้ว!");
+        await setDoc(doc(db, "settings", "homepage"), { 
+          texts: texts, 
+          highlightCards: highlightCards 
+        }, { merge: true });
+        alert("บันทึกข้อมูลหน้าแรกเรียบร้อยแล้ว!");
       } catch (error) {
-        console.error("Error saving texts:", error);
+        console.error("Error saving homepage:", error);
         alert("เกิดข้อผิดพลาดในการบันทึก");
       } finally {
         setIsSaving(false);
       }
     };
 
-    // ฟังก์ชันอัปโหลดรูปสไลด์ (บีบอัดเป็น 1920px สำหรับ Full HD)
+    const handleCardChange = (index, field, value) => {
+      const newCards = [...highlightCards];
+      newCards[index][field] = value;
+      setHighlightCards(newCards);
+    };
+
+    const handleCardImageUpload = async (index, file) => {
+      if (!file) return;
+      setIsUploading(true);
+      try {
+        const compressedFile = await compressImage(file, 800, 0.8);
+        const storageRef = ref(storage, `highlight_cards/card_${index}_${Date.now()}.jpg`);
+        const uploadTask = await uploadBytesResumable(storageRef, compressedFile);
+        const downloadURL = await getDownloadURL(uploadTask.ref);
+
+        const newCards = [...highlightCards];
+        newCards[index].img = downloadURL;
+        setHighlightCards(newCards);
+        
+        await setDoc(doc(db, "settings", "homepage"), { highlightCards: newCards }, { merge: true });
+        alert("อัปโหลดรูปภาพการ์ดสำเร็จ!");
+      } catch (error) {
+        console.error("Upload card image error:", error);
+        alert("อัปโหลดไม่สำเร็จ");
+      } finally {
+        setIsUploading(false);
+      }
+    };
+
     const handleSlideUpload = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       setIsUploading(true);
       try {
-        // ใช้ 1920px เพราะเป็นรูปพื้นหลังจอใหญ่
         const compressedFile = await compressImage(file, 1920, 0.8);
-        
         const storageRef = ref(storage, `hero_slides/${Date.now()}_${file.name}`);
         const uploadTask = await uploadBytesResumable(storageRef, compressedFile);
         const downloadURL = await getDownloadURL(uploadTask.ref);
@@ -284,11 +325,8 @@ export default function AdminPage() {
         };
 
         const updatedSlides = [...slides, newSlide];
-        
-        // เซฟลง Firestore ทันที
         await setDoc(doc(db, "settings", "homepage"), { slides: updatedSlides }, { merge: true });
         setSlides(updatedSlides);
-        
       } catch (error) {
         console.error("Upload error:", error);
         alert("อัปโหลดไม่สำเร็จ กรุณาลองใหม่");
@@ -298,7 +336,6 @@ export default function AdminPage() {
       }
     };
 
-    // ฟังก์ชันลบรูปสไลด์
     const handleDeleteSlide = async (index, storagePath) => {
       if (window.confirm("ยืนยันการลบภาพสไลด์นี้?")) {
         try {
@@ -309,7 +346,6 @@ export default function AdminPage() {
             const fileRef = ref(storage, storagePath);
             await deleteObject(fileRef);
           }
-          
           setSlides(updatedSlides);
         } catch (error) {
           console.error("Delete error:", error);
@@ -329,103 +365,142 @@ export default function AdminPage() {
           <p className="text-slate-400 text-sm mt-3 font-medium">ปรับแต่งข้อความต้อนรับ ตัวเลขสถิติ และรูปภาพสไลด์โชว์พื้นหลัง</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* 📝 ส่วนจัดการข้อความ (Hero Texts) */}
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 relative">
-            <h3 className="text-xl font-black text-green-950 mb-6 flex items-center gap-2">
-              <Type className="w-5 h-5 text-orange-500" /> ข้อความหลัก (Hero Section)
-            </h3>
-            
-            <form onSubmit={handleSaveTexts} className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">ป้ายกำกับ (Badge)</label>
-                <input type="text" value={texts.badge} onChange={e => setTexts({...texts, badge: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-bold text-sm" placeholder="เช่น เปิดรับจองรอบปี..." />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">หัวข้อหลัก (Main Title)</label>
-                <input type="text" value={texts.title} onChange={e => setTexts({...texts, title: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-black text-lg text-green-950" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">คำบรรยายย่อย (Subtitle)</label>
-                <textarea rows="3" value={texts.subtitle} onChange={e => setTexts({...texts, subtitle: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-medium text-sm resize-none"></textarea>
-              </div>
+        <form onSubmit={handleSaveTexts} className="space-y-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            {/* 📝 ส่วนจัดการข้อความ (Hero Texts) */}
+            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 relative">
+              <h3 className="text-xl font-black text-green-950 mb-6 flex items-center gap-2">
+                <Type className="w-5 h-5 text-orange-500" /> ข้อความหลัก (Hero Section)
+              </h3>
+              
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">ป้ายกำกับ (Badge)</label>
+                  <input type="text" value={texts.badge} onChange={e => setTexts({...texts, badge: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-bold text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">หัวข้อหลัก (Main Title)</label>
+                  <input type="text" value={texts.title} onChange={e => setTexts({...texts, title: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-black text-lg text-green-950" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">คำบรรยายย่อย (Subtitle)</label>
+                  <textarea rows="3" value={texts.subtitle} onChange={e => setTexts({...texts, subtitle: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-medium text-sm resize-none"></textarea>
+                </div>
 
-              <div className="border-t border-slate-100 pt-6 mt-6">
-                <h3 className="text-lg font-black text-green-950 mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-orange-500" /> ตัวเลขสถิติ (Trust Bar)
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                    <input type="text" value={texts.stat1Val} onChange={e => setTexts({...texts, stat1Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-green-800 outline-none" />
-                    <input type="text" value={texts.stat1Label} onChange={e => setTexts({...texts, stat1Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                    <input type="text" value={texts.stat2Val} onChange={e => setTexts({...texts, stat2Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-orange-500 outline-none" />
-                    <input type="text" value={texts.stat2Label} onChange={e => setTexts({...texts, stat2Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                    <input type="text" value={texts.stat3Val} onChange={e => setTexts({...texts, stat3Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-green-800 outline-none" />
-                    <input type="text" value={texts.stat3Label} onChange={e => setTexts({...texts, stat3Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                    <input type="text" value={texts.stat4Val} onChange={e => setTexts({...texts, stat4Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-orange-500 outline-none" />
-                    <input type="text" value={texts.stat4Label} onChange={e => setTexts({...texts, stat4Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
+                <div className="border-t border-slate-100 pt-6 mt-6">
+                  <h3 className="text-lg font-black text-green-950 mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-orange-500" /> ตัวเลขสถิติ (Trust Bar)
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                      <input type="text" value={texts.stat1Val} onChange={e => setTexts({...texts, stat1Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-green-800 outline-none" />
+                      <input type="text" value={texts.stat1Label} onChange={e => setTexts({...texts, stat1Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                      <input type="text" value={texts.stat2Val} onChange={e => setTexts({...texts, stat2Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-orange-500 outline-none" />
+                      <input type="text" value={texts.stat2Label} onChange={e => setTexts({...texts, stat2Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                      <input type="text" value={texts.stat3Val} onChange={e => setTexts({...texts, stat3Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-green-800 outline-none" />
+                      <input type="text" value={texts.stat3Label} onChange={e => setTexts({...texts, stat3Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                      <input type="text" value={texts.stat4Val} onChange={e => setTexts({...texts, stat4Val: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-orange-500 outline-none" />
+                      <input type="text" value={texts.stat4Label} onChange={e => setTexts({...texts, stat4Label: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none" />
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <button type="submit" disabled={isSaving} className="w-full mt-6 bg-green-950 hover:bg-orange-500 text-white py-4 rounded-2xl font-black transition-all shadow-xl flex items-center justify-center gap-2">
-                {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} บันทึกข้อความและสถิติ
-              </button>
-            </form>
-          </div>
-
-          {/* 🖼️ ส่วนจัดการรูปภาพสไลด์ (Slideshow) */}
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-black text-green-950 flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-orange-500" /> ภาพพื้นหลัง (Slideshow)
-              </h3>
-              
-              <input type="file" accept="image/*" ref={fileInputRef} onChange={handleSlideUpload} className="hidden" />
-              <button 
-                onClick={() => fileInputRef.current.click()} 
-                disabled={isUploading}
-                className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors disabled:opacity-50"
-              >
-                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} 
-                {isUploading ? 'กำลังอัปโหลด...' : 'เพิ่มรูปภาพ'}
-              </button>
             </div>
 
-            {slides.length === 0 ? (
-              <div className="text-center py-16 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 text-slate-400">
-                <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="font-bold text-sm">ยังไม่มีรูปภาพสไลด์</p>
+            {/* 🖼️ ส่วนจัดการรูปภาพสไลด์ (Slideshow) */}
+            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-black text-green-950 flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-orange-500" /> ภาพพื้นหลัง (Slideshow)
+                </h3>
+                
+                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleSlideUpload} className="hidden" />
+                <button type="button" onClick={() => fileInputRef.current.click()} disabled={isUploading} className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors disabled:opacity-50">
+                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} 
+                  {isUploading ? 'กำลังอัปโหลด...' : 'เพิ่มรูปภาพ'}
+                </button>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {slides.map((slide, index) => (
-                  <div key={index} className="relative group rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[4/3] bg-slate-100">
-                    <img src={slide.url} alt={`Slide ${index}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button 
-                        onClick={() => handleDeleteSlide(index, slide.storagePath)}
-                        className="bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600 hover:scale-110 transition-all shadow-lg"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+              {slides.length === 0 ? (
+                <div className="text-center py-16 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 text-slate-400">
+                  <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p className="font-bold text-sm">ยังไม่มีรูปภาพสไลด์</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {slides.map((slide, index) => (
+                    <div key={index} className="relative group rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[4/3] bg-slate-100">
+                      <img src={slide.url} alt={`Slide ${index}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button type="button" onClick={() => handleDeleteSlide(index, slide.storagePath)} className="bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600 hover:scale-110 transition-all shadow-lg">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-black px-2 py-1 rounded-md backdrop-blur-sm">
-                      #{index + 1}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            <p className="text-xs text-slate-400 mt-6 italic">* ระบบจะสลับรูปภาพพื้นหลังตามลำดับนี้โดยอัตโนมัติ (แนะนำภาพแนวนอน)</p>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+
+          {/* 🏕️ ส่วนจัดการกิจกรรมไฮไลท์ (4 การ์ด) - ปรับ Layout เป็น grid-cols-2 สำหรับจอใหญ่ เพื่อให้ 4 การ์ดแสดงผลสมดุล */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 border-b border-slate-100 pb-6">
+                <div>
+                  <h3 className="text-xl font-black text-green-950 flex items-center gap-2">
+                    <Compass className="w-5 h-5 text-orange-500" /> ส่วนกิจกรรมไฮไลท์ (4 การ์ด)
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-1">ส่วนนี้จะแสดงผลอยู่ใต้แถบตัวเลขสถิติบนหน้าแรก</p>
+                </div>
+                <div className="flex gap-4">
+                   <div>
+                     <label className="text-[10px] font-bold text-slate-400 uppercase">หัวข้อ (Title)</label>
+                     <input type="text" value={texts.activityTitle} onChange={e => setTexts({...texts, activityTitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-black text-sm text-green-900" />
+                   </div>
+                   <div>
+                     <label className="text-[10px] font-bold text-slate-400 uppercase">คำบรรยาย (Subtitle)</label>
+                     <input type="text" value={texts.activitySubtitle} onChange={e => setTexts({...texts, activitySubtitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold text-sm text-orange-500" />
+                   </div>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+               {highlightCards.map((card, index) => (
+                 <div key={index} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col gap-4">
+                    <div className="relative h-40 bg-slate-200 rounded-xl overflow-hidden group border border-slate-300">
+                       <img src={card.img} alt={card.title} className="w-full h-full object-cover" />
+                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                          <label className="cursor-pointer bg-white text-slate-800 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 hover:bg-orange-500 hover:text-white transition-colors">
+                             <Upload className="w-4 h-4" /> เปลี่ยนรูป
+                             <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCardImageUpload(index, e.target.files[0])} />
+                          </label>
+                       </div>
+                    </div>
+                    <div>
+                       <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">ชื่อการ์ด</label>
+                       <input type="text" value={card.title} onChange={e => handleCardChange(index, 'title', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg font-bold text-sm" />
+                    </div>
+                    <div>
+                       <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">คำอธิบาย</label>
+                       <textarea rows="3" value={card.desc} onChange={e => handleCardChange(index, 'desc', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm resize-none"></textarea>
+                    </div>
+                 </div>
+               ))}
+             </div>
+          </div>
+
+          <div className="flex justify-end">
+             <button type="submit" disabled={isSaving || isUploading} className="bg-green-950 hover:bg-orange-500 text-white px-12 py-4 rounded-2xl font-black transition-all shadow-xl flex items-center justify-center gap-2 text-lg active:scale-95 disabled:opacity-50">
+                {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />} บันทึกการเปลี่ยนแปลงหน้าแรกทั้งหมด
+             </button>
+          </div>
+        </form>
       </div>
     );
   };
@@ -442,13 +517,7 @@ export default function AdminPage() {
     const [editingId, setEditingId] = useState(null);
     
     const [formData, setFormData] = useState({
-      id_number: '',
-      name: '',
-      desc: '',
-      top: '50%',
-      left: '50%',
-      img: '',
-      storagePath: ''
+      id_number: '', name: '', desc: '', top: '50%', left: '50%', img: '', storagePath: ''
     });
     
     const [pendingFile, setPendingFile] = useState(null);
@@ -474,19 +543,16 @@ export default function AdminPage() {
       fetchBases();
     }, []);
 
-    // ระบบบีบอัดภาพก่อนนำไปใช้งานในฟอร์มกิจกรรม
     const handleFileSelect = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       try {
         const compressedFile = await compressImage(file, 1200, 0.8);
-        
         if (compressedFile.size > 5 * 1024 * 1024) {
           alert("ขนาดไฟล์ยังคงเกิน 5MB แม้จะถูกบีบอัดแล้ว กรุณาเลือกรูปอื่น");
           return;
         }
-
         setPendingFile(compressedFile);
         setPreviewUrl(URL.createObjectURL(compressedFile));
       } catch (error) {
@@ -499,12 +565,7 @@ export default function AdminPage() {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 100;
       const y = ((e.clientY - rect.top) / rect.height) * 100;
-      
-      setFormData({
-        ...formData,
-        left: `${x.toFixed(1)}%`,
-        top: `${y.toFixed(1)}%`
-      });
+      setFormData({...formData, left: `${x.toFixed(1)}%`, top: `${y.toFixed(1)}%`});
     };
 
     const openAddModal = () => {
@@ -549,7 +610,6 @@ export default function AdminPage() {
       if (pendingFile) {
         const storageRef = ref(storage, `bases/${Date.now()}_${pendingFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, pendingFile);
-        
         try {
           await new Promise((resolve, reject) => {
             uploadTask.on('state_changed', null, reject, resolve);
@@ -600,10 +660,7 @@ export default function AdminPage() {
             <h2 className="text-3xl font-black text-slate-800 tracking-tight uppercase italic underline decoration-orange-500 decoration-4 underline-offset-8">จัดการฐานกิจกรรม</h2>
             <p className="text-slate-400 text-sm mt-3 font-medium">เพิ่ม/ลบ ฐานกิจกรรม และปักหมุดบนแผนที่ Interactive</p>
           </div>
-          <button 
-            onClick={openAddModal}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-orange-500/20 transition-all active:scale-95"
-          >
+          <button onClick={openAddModal} className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-orange-500/20 transition-all active:scale-95">
             <Plus className="w-6 h-6" /> เพิ่มฐานใหม่
           </button>
         </div>
@@ -612,11 +669,7 @@ export default function AdminPage() {
            <div className="w-full md:w-1/2 h-64 bg-slate-200 rounded-[1.5rem] relative overflow-hidden bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800')] bg-cover bg-center border-4 border-slate-100">
               <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]"></div>
               {bases.map(base => (
-                <div 
-                  key={base.id} 
-                  className="absolute w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg transform -translate-x-1/2 -translate-y-1/2 border-2 border-white"
-                  style={{ top: base.top, left: base.left }}
-                >
+                <div key={base.id} className="absolute w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg transform -translate-x-1/2 -translate-y-1/2 border-2 border-white" style={{ top: base.top, left: base.left }}>
                   {base.id_number}
                 </div>
               ))}
@@ -705,16 +758,9 @@ export default function AdminPage() {
                   <p className="text-xs text-orange-600 font-medium">คลิกตำแหน่งบนรูปแผนที่ด้านล่าง เพื่อย้ายหมุดหมายเลขฐานโดยอัตโนมัติ</p>
                 </div>
                 
-                <div 
-                  className="w-full h-[300px] md:h-full bg-slate-200 rounded-[2rem] relative overflow-hidden cursor-crosshair border-4 border-slate-100 shadow-inner group bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800')] bg-cover bg-center"
-                  onClick={handleMapClick}
-                >
+                <div className="w-full h-[300px] md:h-full bg-slate-200 rounded-[2rem] relative overflow-hidden cursor-crosshair border-4 border-slate-100 shadow-inner group bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800')] bg-cover bg-center" onClick={handleMapClick}>
                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] group-hover:bg-white/40 transition-colors"></div>
-                   
-                   <div 
-                     className="absolute w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-xl shadow-2xl transform -translate-x-1/2 -translate-y-1/2 border-4 border-white transition-all duration-300 ease-out z-10"
-                     style={{ top: formData.top, left: formData.left }}
-                   >
+                   <div className="absolute w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-xl shadow-2xl transform -translate-x-1/2 -translate-y-1/2 border-4 border-white transition-all duration-300 ease-out z-10" style={{ top: formData.top, left: formData.left }}>
                      {formData.id_number || '?'}
                    </div>
                 </div>
@@ -769,25 +815,21 @@ export default function AdminPage() {
       fetchImages();
     }, []);
 
-    // ระบบบีบอัดภาพก่อนเปิด Modal ให้ตั้งชื่อในแกลลอรี่
     const handleFileSelect = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       try {
         const compressedFile = await compressImage(file, 1200, 0.8);
-
         if (compressedFile.size > 5 * 1024 * 1024) {
           alert("ขนาดไฟล์ใหญ่เกินไป กรุณาอัปโหลดรูปที่ไม่เกิน 5MB");
           return;
         }
-
         setPendingFile(compressedFile);
         setPreviewUrl(URL.createObjectURL(compressedFile)); 
         setImageName(''); 
         setImageCategory(filter === 'ทั้งหมด' ? 'กิจกรรม' : filter); 
         setShowUploadModal(true); 
-        
         if (fileInputRef.current) fileInputRef.current.value = '';
       } catch (error) {
         console.error("Compression error:", error);
@@ -800,7 +842,6 @@ export default function AdminPage() {
         alert('กรุณาระบุ "ชื่อหรือคำอธิบายภาพ" ก่อนอัปโหลดครับ');
         return;
       }
-
       setShowUploadModal(false);
       setIsUploading(true);
       
@@ -809,10 +850,7 @@ export default function AdminPage() {
       const uploadTask = uploadBytesResumable(storageRef, file);
 
       uploadTask.on('state_changed', 
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        }, 
+        (snapshot) => setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100), 
         (error) => {
           console.error("Upload failed", error);
           alert("อัปโหลดไม่สำเร็จ กรุณาลองใหม่");
@@ -820,22 +858,13 @@ export default function AdminPage() {
         }, 
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          
-          const newImageData = {
-            src: downloadURL,
-            name: imageName, 
-            category: imageCategory,
-            createdAt: serverTimestamp(),
-            storagePath: uploadTask.snapshot.ref.fullPath 
-          };
-
+          const newImageData = { src: downloadURL, name: imageName, category: imageCategory, createdAt: serverTimestamp(), storagePath: uploadTask.snapshot.ref.fullPath };
           try {
             const docRef = await addDoc(collection(db, "gallery"), newImageData);
             setImages(prev => [{ id: docRef.id, ...newImageData, createdAt: new Date() }, ...prev]);
           } catch (err) {
             console.error("Error adding document: ", err);
           }
-
           setIsUploading(false);
           setUploadProgress(0);
           setPendingFile(null);
@@ -861,16 +890,10 @@ export default function AdminPage() {
     };
 
     const filteredImages = filter === 'ทั้งหมด' ? images : images.filter(img => img.category === filter);
-
-    // 🌟 ตัวช่วยสำหรับแปลงวันที่ให้ปลอดภัย (ไม่พังถ้ายังโหลดไม่เสร็จ)
     const renderDate = (createdAt) => {
       if (!createdAt) return "เพิ่งอัปโหลด";
-      if (typeof createdAt.toDate === 'function') {
-        return createdAt.toDate().toLocaleDateString('th-TH');
-      }
-      if (createdAt instanceof Date) {
-        return createdAt.toLocaleDateString('th-TH');
-      }
+      if (typeof createdAt.toDate === 'function') return createdAt.toDate().toLocaleDateString('th-TH');
+      if (createdAt instanceof Date) return createdAt.toLocaleDateString('th-TH');
       return "เพิ่งอัปโหลด";
     };
 
@@ -882,18 +905,8 @@ export default function AdminPage() {
             <p className="text-slate-400 text-sm mt-3 font-medium">อัปโหลดรูปภาพใหม่ ระบบจะทำการบีบอัดขนาดไฟล์ให้อัตโนมัติ</p>
           </div>
           
-          <input 
-            type="file" 
-            accept="image/*" 
-            ref={fileInputRef} 
-            onChange={handleFileSelect} 
-            className="hidden" 
-          />
-          <button 
-            onClick={() => fileInputRef.current.click()}
-            disabled={isUploading}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-orange-500/20 transition-all active:scale-95 disabled:opacity-50"
-          >
+          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+          <button onClick={() => fileInputRef.current.click()} disabled={isUploading} className="bg-orange-50 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-orange-500/20 transition-all active:scale-95 disabled:opacity-50">
             {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />} 
             {isUploading ? `กำลังอัปโหลด ${Math.round(uploadProgress)}%` : "อัปโหลดรูปภาพใหม่"}
           </button>
@@ -901,10 +914,7 @@ export default function AdminPage() {
 
         <div className="flex flex-wrap gap-4 border-b border-slate-100 pb-6">
            {['ทั้งหมด', 'กิจกรรม', 'สถานที่', 'ห้องพัก', 'อาหาร', 'บุคลากร'].map((cat, i) => (
-             <button 
-               key={i} 
-               onClick={() => setFilter(cat)}
-               className={`px-8 py-3 rounded-2xl text-xs font-black transition-all uppercase tracking-widest ${filter === cat ? 'bg-green-950 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-slate-100 border border-slate-100'}`}>
+             <button key={i} onClick={() => setFilter(cat)} className={`px-8 py-3 rounded-2xl text-xs font-black transition-all uppercase tracking-widest ${filter === cat ? 'bg-green-950 text-white shadow-lg' : 'bg-white text-slate-400 hover:bg-slate-100 border border-slate-100'}`}>
                {cat}
              </button>
            ))}
@@ -920,23 +930,15 @@ export default function AdminPage() {
                <div key={img.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all group">
                   <div className="relative h-56 overflow-hidden bg-slate-100">
                      <img src={img.src} alt={img.name} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" />
-                     <div className="absolute top-4 left-4 px-4 py-1.5 bg-green-950/90 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-white tracking-widest shadow-lg">
-                        {img.category}
-                     </div>
+                     <div className="absolute top-4 left-4 px-4 py-1.5 bg-green-950/90 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-white tracking-widest shadow-lg">{img.category}</div>
                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                        <a href={img.src} target="_blank" rel="noreferrer" className="p-3 bg-white rounded-2xl text-slate-800 hover:bg-orange-500 hover:text-white transition-all shadow-xl" title="ดูรูปภาพ">
-                           <Eye className="w-6 h-6" />
-                        </a>
-                        <button onClick={() => handleDelete(img.id, img.storagePath)} className="p-3 bg-white rounded-2xl text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-xl" title="ลบรูปภาพ">
-                           <Trash2 className="w-6 h-6" />
-                        </button>
+                        <a href={img.src} target="_blank" rel="noreferrer" className="p-3 bg-white rounded-2xl text-slate-800 hover:bg-orange-500 hover:text-white transition-all shadow-xl" title="ดูรูปภาพ"><Eye className="w-6 h-6" /></a>
+                        <button onClick={() => handleDelete(img.id, img.storagePath)} className="p-3 bg-white rounded-2xl text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-xl" title="ลบรูปภาพ"><Trash2 className="w-6 h-6" /></button>
                      </div>
                   </div>
                   <div className="p-6">
                      <h4 className="font-black text-slate-800 truncate mb-1 text-lg" title={img.name}>{img.name}</h4>
-                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter italic">
-                        {renderDate(img.createdAt)}
-                     </p>
+                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter italic">{renderDate(img.createdAt)}</p>
                   </div>
                </div>
              ))}
@@ -948,54 +950,24 @@ export default function AdminPage() {
             <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-black text-slate-800">รายละเอียดรูปภาพ</h3>
-                <button onClick={() => setShowUploadModal(false)} className="text-slate-400 hover:text-rose-500 transition-colors">
-                  <X className="w-6 h-6" />
-                </button>
+                <button onClick={() => setShowUploadModal(false)} className="text-slate-400 hover:text-rose-500 transition-colors"><X className="w-6 h-6" /></button>
               </div>
-              
-              <div className="w-full h-48 bg-slate-100 rounded-[1.5rem] mb-6 overflow-hidden border border-slate-200">
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-              </div>
-
+              <div className="w-full h-48 bg-slate-100 rounded-[1.5rem] mb-6 overflow-hidden border border-slate-200"><img src={previewUrl} alt="Preview" className="w-full h-full object-cover" /></div>
               <div className="space-y-5">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">ชื่อ/คำอธิบายภาพ <span className="text-rose-500">*</span></label>
-                  <input 
-                    type="text" 
-                    placeholder="เช่น โรงอาหาร, ลานหน้าเสาธง, กระโดดหอ" 
-                    value={imageName}
-                    onChange={(e) => setImageName(e.target.value)}
-                    autoFocus
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all outline-none font-medium"
-                  />
+                  <input type="text" placeholder="เช่น โรงอาหาร, ลานหน้าเสาธง, กระโดดหอ" value={imageName} onChange={(e) => setImageName(e.target.value)} autoFocus className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-medium" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">หมวดหมู่</label>
-                  <select 
-                    value={imageCategory}
-                    onChange={(e) => setImageCategory(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all outline-none font-bold text-slate-700 appearance-none"
-                  >
-                    {['กิจกรรม', 'สถานที่', 'ห้องพัก', 'อาหาร', 'บุคลากร'].map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
+                  <select value={imageCategory} onChange={(e) => setImageCategory(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-bold text-slate-700">
+                    {['กิจกรรม', 'สถานที่', 'ห้องพัก', 'อาหาร', 'บุคลากร'].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
                   </select>
                 </div>
               </div>
-
               <div className="flex gap-4 mt-8">
-                <button 
-                  onClick={() => setShowUploadModal(false)}
-                  className="flex-1 py-4 rounded-2xl font-black text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors"
-                >
-                  ยกเลิก
-                </button>
-                <button 
-                  onClick={confirmUpload}
-                  className="flex-1 py-4 rounded-2xl font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-xl shadow-orange-500/30"
-                >
-                  บันทึกและอัปโหลด
-                </button>
+                <button onClick={() => setShowUploadModal(false)} className="flex-1 py-4 rounded-2xl font-black text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors">ยกเลิก</button>
+                <button onClick={confirmUpload} className="flex-1 py-4 rounded-2xl font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-xl">บันทึกและอัปโหลด</button>
               </div>
             </div>
           </div>
