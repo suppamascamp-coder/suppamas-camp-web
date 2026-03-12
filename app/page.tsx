@@ -5,12 +5,12 @@ import {
   ShieldCheck, BedDouble, Utensils, AlertCircle,
   ArrowRight, Image as ImageIcon, MapPin, Navigation, Heart,
   Phone, Facebook, MessageCircle, Clock, UserCheck, Award,
-  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles
+  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles, Calendar, Info
 } from 'lucide-react';
 import GoogleReviews from '../src/components/GoogleReviews'; 
 import AdventureMapModal from '../src/components/AdventureMapModal'; 
 
-// 📌 นำเข้า Firebase เพื่อดึงข้อมูลมาโชว์หน้าแรก
+// 📌 นำเข้า Firebase
 import { db } from '../src/lib/firebase';
 import { collection, getDocs, getDoc, doc, query, orderBy, limit } from 'firebase/firestore';
 
@@ -42,8 +42,8 @@ export default function Home() {
         if (docSnap.exists()) {
           setHomepageData(docSnap.data());
         }
-      } catch (error) {
-        console.error("Error fetching homepage data:", error);
+      } catch (error) { 
+        console.error("Error fetching homepage data:", error); 
       }
     };
     fetchHomepageData();
@@ -91,8 +91,7 @@ export default function Home() {
   // 🛡️ ข้อมูลสำรอง (Fallback Data)
   // ==========================================
   const fallbackHeroSlides = [
-    "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=2000",
-    "https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=2000"
+    "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=2000"
   ];
 
   const defaultTexts = {
@@ -104,22 +103,39 @@ export default function Home() {
     stat3Val: '600', stat3Label: 'ความจุเรือนนอน (คน)',
     stat4Val: '100%', stat4Label: 'มาตรฐานความปลอดภัย',
     activityTitle: 'HIGH-IMPACT ACTIVITIES',
-    activitySubtitle: '"สนุก ท้าทาย ได้ทักษะชีวิตที่แท้จริง"'
+    activitySubtitle: '"สนุก ท้าทาย ได้ทักษะชีวิตที่แท้จริง"',
+    facilityTitle: 'SAFETY & COMFORT',
+    facilitySubtitle: '"ความสะอาดและปลอดภัยคือหัวใจของค่ายอนุสรณ์ศุภมาศ"'
   };
 
-  // ชุดข้อมูล 4 การ์ด (กรณี Firebase ยังไม่มีข้อมูล)
   const defaultCards = [
     { title: 'ฐานกิจกรรมผจญภัย', desc: 'ทดสอบความกล้ากับสไลเดอร์น้ำสูง 10 เมตร, โดดหอ และฐานเชือกกว่า 10 รูปแบบ', img: 'https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=800' },
     { title: 'กิจกรรมรอบกองไฟ', desc: 'ลานกิจกรรมมาตรฐานจุได้ 1-600 คน พร้อมระบบแสงสีเสียงเต็มรูปแบบ และบริการ LIVE Streaming ให้ผู้ปกครองดูจากที่บ้าน', img: 'https://images.unsplash.com/photo-1504280655536-2605761a54dc?auto=format&fit=crop&q=80&w=800' },
     { title: 'ทักษะชีวิตและทีมเวิร์ค', desc: 'วิชาประกอบอาหาร (สูทกรรม), ปฐมพยาบาล และการแก้ปัญหาร่วมกันผ่านเกมสถานการณ์จำลอง', img: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&q=80&w=800' },
-    { title: 'กิจกรรมใหม่ล่าสุด', desc: 'ฐานกิจกรรมใหม่ที่ออกแบบมาเพื่อเสริมสร้างจินตนาการและการเรียนรู้อย่างสร้างสรรค์', img: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=800' }
+    { title: 'เดินทางไกล/สำรวจ', desc: 'ระยะทางที่อยู่ในระดับพอดีไม่ใกล้เกินไป บนหุบเขาที่จัดว่าเป็นหนึ่งในสวรรค์ของนักเดินทางไกล', img: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=800' }
   ];
 
-  const displaySlides = homepageData?.slides?.length > 0 ? homepageData.slides.map((s: any) => s.url) : fallbackHeroSlides;
+  const defaultFeatures = [
+    { title: "ความปลอดภัย 24 ชม.", desc: "กล้อง CCTV 40 จุด รอบค่าย และหน่วยพยาบาลจากสว่างราชบุรีสแตนด์บายตลอดการเข้าค่าย", icon: "ShieldCheck", color: "text-orange-500" },
+    { title: "เรือนนอนมาตรฐาน", desc: "แยกสัดส่วนชาย-หญิงชัดเจน ห้องน้ำสะอาดเพียงพอกับจำนวนเด็ก อากาศถ่ายเทสะดวก พัดลมครบ", icon: "BedDouble", color: "text-blue-400" },
+    { title: "โรงอาหารสะอาด 5 ดาว", desc: "อาหารปรุงสุกใหม่ ถูกหลักโภชนาการ ปริมาณเต็มอิ่ม เติมได้ไม่อั้น และรองรับได้กว่า 600 ท่าน", icon: "Utensils", color: "text-green-400" }
+  ];
+
   const displayTexts = homepageData?.texts ? { ...defaultTexts, ...homepageData.texts } : defaultTexts;
-  
-  // ให้ดึงข้อมูล 4 การ์ด ถ้าใน Firebase มี 4 การ์ด ถ้าไม่มีให้ใช้ default
-  const displayCards = homepageData?.highlightCards?.length === 4 ? homepageData.highlightCards : defaultCards;
+  const displayCards = homepageData?.highlightCards?.length > 0 ? homepageData.highlightCards : defaultCards;
+  const displayFeatures = homepageData?.featureCards?.length > 0 ? homepageData.featureCards : defaultFeatures;
+  const displaySlides = homepageData?.slides?.length > 0 ? homepageData.slides.map((s: any) => s.url) : fallbackHeroSlides;
+
+  // ฟังก์ชันแปลงชื่อ Icon เป็น Component
+  const renderIcon = (iconName: string) => {
+    const iconClass = "w-16 h-16 mx-auto mb-8 transition-transform group-hover:scale-110";
+    switch(iconName) {
+      case 'ShieldCheck': return <ShieldCheck className={`${iconClass} text-orange-500`} />;
+      case 'BedDouble': return <BedDouble className={`${iconClass} text-blue-400`} />;
+      case 'Utensils': return <Utensils className={`${iconClass} text-green-400`} />;
+      default: return <Info className={`${iconClass} text-orange-400`} />;
+    }
+  };
 
   const fallbackImages = [
     { src: "https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=1000", name: "ฐานผจญภัยลูกเสือ", category: "กิจกรรม" },
@@ -164,7 +180,7 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto w-full">
-          <span className="inline-block py-1 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-4 backdrop-blur-sm animate-pulse uppercase tracking-[0.2em]">
+          <span className="inline-block py-1.5 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-6 backdrop-blur-sm uppercase tracking-widest">
             {displayTexts.badge}
           </span>
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl leading-tight">
@@ -184,19 +200,23 @@ export default function Home() {
               );
             })()}
           </h1>
-          <p className="text-base md:text-xl lg:text-2xl text-gray-200 mb-8 drop-shadow-md max-w-3xl mx-auto font-light leading-relaxed">
+          <p className="text-base md:text-xl lg:text-2xl text-gray-200 mb-10 drop-shadow-md max-w-3xl mx-auto font-light leading-relaxed">
             {displayTexts.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a href="#packages" className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-xl text-center">จองค่าย/ดูราคา</a>
-            <a href="#about" className="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/40 text-white px-10 py-4 rounded-full font-bold text-lg transition-all text-center">ทำความรู้จักเรา</a>
+            <a href="/campcalendar.html" target="_blank" className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full font-bold text-lg transition-all shadow-xl flex items-center justify-center gap-2 active:scale-95">
+              <Calendar className="w-5 h-5" /> ตรวจสอบคิวว่าง
+            </a>
+            <a href="#about" className="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/40 text-white px-10 py-4 rounded-full font-bold text-lg transition-all text-center active:scale-95">
+              ทำความรู้จักเรา
+            </a>
           </div>
         </div>
       </section>
 
       {/* 2. Trust Bar */}
       <section className="relative z-20 -mt-10 md:-mt-20 max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-[2rem] shadow-2xl p-6 md:p-10 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 border-b-8 border-orange-500">
+        <div className="bg-white rounded-[2rem] shadow-2xl p-8 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 border-b-8 border-orange-500">
           {[
             { label: displayTexts.stat1Label, val: displayTexts.stat1Val, color: "text-green-800" },
             { label: displayTexts.stat2Label, val: displayTexts.stat2Val, color: "text-orange-500" },
@@ -204,8 +224,8 @@ export default function Home() {
             { label: displayTexts.stat4Label, val: displayTexts.stat4Val, color: "text-orange-500" }
           ].map((item, i) => (
             <div key={i} className={`text-center ${i !== 0 ? 'border-l border-gray-100' : ''}`}>
-              <div className={`text-2xl md:text-4xl font-black ${item.color}`}>{item.val}</div>
-              <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-tighter mt-1">{item.label}</div>
+              <div className={`text-3xl md:text-4xl font-black ${item.color}`}>{item.val}</div>
+              <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-tighter mt-1 leading-none">{item.label}</div>
             </div>
           ))}
         </div>
@@ -272,50 +292,38 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. 🌟 Activities Section (ปรับเป็น 4 การ์ด แสดงข้อความครบถ้วน) 🌟 */}
+      {/* 5. 🌟 Activities Section (ดึงข้อมูล 4 การ์ด ไดนามิกจาก Firebase) 🌟 */}
       <section id="activities" className="py-24 scroll-mt-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 text-center md:text-left">
              <div>
-                <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-4 tracking-tighter uppercase">{displayTexts.activityTitle}</h2>
-                <p className="text-orange-500 text-lg font-bold italic">{displayTexts.activitySubtitle}</p>
+                <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-4 uppercase">{displayTexts.activityTitle}</h2>
+                <p className="text-orange-500 text-lg font-bold italic leading-none">{displayTexts.activitySubtitle}</p>
              </div>
-             <button onClick={() => {
-                 document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' });
-             }} className="text-green-800 font-bold border-b-2 border-green-800 pb-1 hover:text-orange-500 hover:border-orange-500 transition-all flex items-center gap-2 mx-auto md:mx-0">ดูรูปกิจกรรมทั้งหมดในแกลลอรี่ <ArrowRight className="w-4 h-4" /></button>
+             <button onClick={() => document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' })} className="text-green-800 font-bold border-b-2 border-green-800 pb-1 hover:text-orange-500 transition-all flex items-center gap-2 mx-auto md:mx-0 shrink-0">ดูรูปทั้งหมด <ArrowRight className="w-4 h-4" /></button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {displayCards.map((card: any, index: number) => {
-              // ชุดไอคอนสำหรับวนลูปแสดงบนการ์ดแต่ละใบ
               const icons = [Compass, Flame, Users, Sparkles];
               const Icon = icons[index % icons.length];
-              const isFirstCard = index === 0;
+              const isFirst = index === 0;
 
               return (
-                <div key={index} className="group rounded-[2.5rem] overflow-hidden bg-white shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 relative flex flex-col">
-                  {/* รูปภาพพร้อมไอคอนตกแต่ง */}
-                  <div className="relative h-64 overflow-hidden shrink-0">
+                <div key={index} className="group rounded-[2.5rem] overflow-hidden bg-white shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-100 relative flex flex-col">
+                  <div className="relative h-64 overflow-hidden shrink-0 bg-slate-200">
                     <img src={card.img} alt={card.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className={`absolute inset-0 bg-gradient-to-t ${isFirstCard ? 'from-green-950/90' : 'from-black/80'} via-black/20 to-transparent`}></div>
-                    <div className="absolute bottom-4 left-4 w-12 h-12 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
-                      <Icon className="w-6 h-6 text-orange-400 drop-shadow-md" />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${isFirst ? 'from-green-950/90' : 'from-black/80'} via-black/20 to-transparent`}></div>
+                    <div className="absolute bottom-4 left-4 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
+                      <Icon className="w-5 h-5 text-orange-400" />
                     </div>
                   </div>
-                  
-                  {/* ข้อความแสดงแบบเต็มๆ ไม่มีตัดคำ ไม่มีคำว่า 'ดูรายละเอียด' */}
                   <div className="p-8 flex flex-col flex-1">
-                    <h3 className={`text-2xl font-black mb-3 transition-colors ${isFirstCard ? 'text-green-800' : 'text-slate-800 group-hover:text-green-800'}`}>
-                      {card.title}
-                    </h3>
-                    <p className="text-slate-500 leading-relaxed font-medium flex-1">
-                      {card.desc}
-                    </p>
-                    
-                    {/* คงปุ่มแผนที่ไว้เฉพาะการ์ดใบแรกเท่านั้น */}
-                    {isFirstCard && (
-                      <button onClick={() => setIsMapModalOpen(true)} className="mt-8 w-full py-4 rounded-2xl font-black bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center gap-2 shrink-0">
-                        <Map className="w-5 h-5" /> ดูแผนที่ฐาน
+                    <h3 className={`text-xl font-black mb-4 ${isFirst ? 'text-green-800' : 'text-slate-800 group-hover:text-green-800'} transition-colors`}>{card.title}</h3>
+                    <p className="text-slate-500 leading-relaxed font-medium flex-1 text-sm">{card.desc}</p>
+                    {isFirst && (
+                      <button onClick={() => setIsMapModalOpen(true)} className="mt-8 w-full py-4 rounded-2xl font-black bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center gap-2">
+                        <Map className="w-5 h-5" /> ดูแผนที่ฐานผจญภัย
                       </button>
                     )}
                   </div>
@@ -326,23 +334,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. Facilities & Safety */}
+      {/* 6. 🌟 Facilities & Safety (ดึงข้อมูลสิ่งอำนวยความสะดวกแบบ Dynamic) 🌟 */}
       <section id="facilities" className="py-24 bg-green-950 text-white scroll-mt-20 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-96 h-96 bg-green-800 rounded-full blur-[100px] opacity-20 -mr-48 -mt-48"></div>
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="text-center mb-20">
-             <h2 className="text-3xl md:text-5xl font-black mb-6 uppercase">Safety & Comfort</h2>
-             <p className="text-green-300 max-w-2xl mx-auto text-lg font-light tracking-wide italic">"ความสะอาดและปลอดภัยคือหัวใจของค่ายอนุสรณ์ศุภมาศ"</p>
+             <h2 className="text-3xl md:text-5xl font-black mb-6 uppercase tracking-tight italic">{displayTexts.facilityTitle}</h2>
+             <p className="text-green-300 max-w-2xl mx-auto text-lg font-light tracking-wide italic leading-relaxed">{displayTexts.facilitySubtitle}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            {[
-              { icon: ShieldCheck, title: "ความปลอดภัย 24 ชม.", desc: "กล้อง CCTV 40 จุด รอบค่าย และหน่วยพยาบาลจากสว่างราชบุรีสแตนด์บายตลอดการเข้าค่าย", color: "text-orange-500" },
-              { icon: BedDouble, title: "เรือนนอนมาตรฐาน", desc: "แยกสัดส่วนชาย-หญิงชัดเจน ห้องน้ำสะอาดเพียงพอกับจำนวนเด็ก อากาศถ่ายเทสะดวก พัดลมครบ", color: "text-blue-400" },
-              { icon: Utensils, title: "โรงอาหารสะอาด 5 ดาว", desc: "อาหารปรุงสุกใหม่ ถูกหลักโภชนาการ ปริมาณเต็มอิ่ม เติมได้ไม่อั้น และรองรับได้กว่า 600 ท่าน", color: "text-green-400" }
-            ].map((item, idx) => (
-              <div key={idx} className="p-10 rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all group">
-                <item.icon className={`w-16 h-16 mx-auto mb-8 transition-transform group-hover:scale-110 ${item.color}`} />
-                <h3 className="text-xl font-bold mb-4">{item.title}</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 text-center">
+            {displayFeatures.map((item: any, idx: number) => (
+              <div key={idx} className="p-12 rounded-[3.5rem] bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all group shadow-inner">
+                {renderIcon(item.icon)}
+                <h3 className="text-2xl font-black mb-4 italic uppercase">{item.title}</h3>
                 <p className="text-green-100/70 text-sm leading-relaxed font-light">{item.desc}</p>
               </div>
             ))}
@@ -406,7 +411,7 @@ export default function Home() {
               </div>
               <ul className="space-y-4 flex-1 mb-8">
                 {["กิจกรรมบุกเบิก / ผจญภัย", "ประกอบอาหาร / สูทกรรม", "กิจกรรมรอบกองไฟ", "เดินทางไกล / สำรวจ", "อาหาร 4 มื้อ + ที่พัก 1 คืน", "พยาบาลประจำ 24 ชม."].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-sm font-bold text-slate-600"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" /> {item}</li>
+                  <li key={idx} className="flex items-start gap-3 text-sm font-bold text-slate-600"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" /> {item}</li>
                 ))}
               </ul>
             </div>

@@ -14,7 +14,7 @@ export default function Footer() {
             <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center rotate-3 shadow-lg">
                <Tent className="w-7 h-7 text-white" />
             </div>
-            <span className="font-black text-2xl text-white uppercase tracking-tighter italic">ค่ายอนุสรณ์ศุภมาศ</span>
+            <span className="font-black text-2xl text-white uppercase tracking-tighter italic">ค่ายอนุสรณ์ศุภมาศ ราชบุรี</span>
           </div>
           <p className="mb-8 leading-relaxed font-medium text-green-100/60 italic">"ศูนย์ฝึกอบรมเยาวชนและค่ายลูกเสือมาตรฐาน <br/>ที่หนึ่งในใจของคุณครูและนักเรียนทั่วประเทศ"</p>
           
@@ -69,7 +69,7 @@ export default function Footer() {
         <div className="flex items-center gap-2">
            <span className="text-[10px] font-black text-green-100/20 uppercase tracking-widest">Connect with us</span>
            <div className="w-8 h-[1px] bg-white/10"></div>
-           <p className="text-[10px] font-bold text-green-100/40 uppercase">@ascamp</p>
+           <p className="text-[10px] font-bold text-green-100/40 uppercase">@ค่ายลูกเสืออนุสรณ์ศุภมาศ</p>
         </div>
       </div>
     </footer>
