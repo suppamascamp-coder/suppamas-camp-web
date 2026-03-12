@@ -7,6 +7,7 @@ import {
   Phone, Facebook, MessageCircle, Clock, UserCheck, Award,
   X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles, Calendar, Info, ZoomIn
 } from 'lucide-react';
+import ActivityCard from '../src/components/ActivityCard'; 
 import GoogleReviews from '../src/components/GoogleReviews'; 
 import AdventureMapModal from '../src/components/AdventureMapModal'; 
 
@@ -105,7 +106,9 @@ export default function Home() {
     activityTitle: 'HIGH-IMPACT ACTIVITIES',
     activitySubtitle: '"สนุก ท้าทาย ได้ทักษะชีวิตที่แท้จริง"',
     facilityTitle: 'SAFETY & COMFORT',
-    facilitySubtitle: '"ความสะอาดและปลอดภัยคือหัวใจของค่ายอนุสรณ์ศุภมาศ"'
+    facilitySubtitle: '"ความสะอาดและปลอดภัยคือหัวใจของค่ายอนุสรณ์ศุภมาศ"',
+    staffSummaryTitle: 'ทีมงานวิทยากรและสตาฟกว่า 30 ท่าน',
+    staffSummaryDesc: 'พร้อมดูแลนักเรียนทุกคนอย่างใกล้ชิด ตลอด 24 ชั่วโมง'
   };
 
   const defaultCards = [
@@ -121,10 +124,21 @@ export default function Home() {
     { title: "โรงอาหารสะอาด 5 ดาว", desc: "อาหารปรุงสุกใหม่ ถูกหลักโภชนาการ ปริมาณเต็มอิ่ม เติมได้ไม่อั้น และรองรับได้กว่า 600 ท่าน", icon: "Utensils", color: "text-green-400" }
   ];
 
+  const defaultStaff = [
+    { name: "นายมนตรี คงสกุลถาวร", pos: "ผู้อำนวยการค่ายอนุสรณ์ศุภมาศ", showOnHome: true },
+    { name: "นายเฉลิมชัย คงสกุลถาวร", pos: "ฝ่ายหลักสูตรและการฝึกอบรม", showOnHome: true },
+    { name: "นายสหัส บ่อขุนทด", pos: "หัวหน้าทีมกิจกรรมและวิทยากร", showOnHome: true },
+    { name: "นายสุรินทร์ ครบเบญจะ", pos: "ฝ่ายพยาบาลและกู้ชีพ (สว่างราชบุรี)", showOnHome: true }
+  ];
+
   const displayTexts = homepageData?.texts ? { ...defaultTexts, ...homepageData.texts } : defaultTexts;
   const displayCards = homepageData?.highlightCards?.length > 0 ? homepageData.highlightCards : defaultCards;
   const displayFeatures = homepageData?.featureCards?.length > 0 ? homepageData.featureCards : defaultFeatures;
   const displaySlides = homepageData?.slides?.length > 0 ? homepageData.slides.map((s: any) => s.url) : fallbackHeroSlides;
+
+  // 🌟 ดึงข้อมูลพนักงานทั้งหมด และกรองเฉพาะคนที่ถูกติ๊กให้โชว์หน้าแรก
+  const allStaff = homepageData?.staffList?.length > 0 ? homepageData.staffList : defaultStaff;
+  const homeStaff = allStaff.filter((person: any) => person.showOnHome !== false);
 
   // ฟังก์ชันแปลงชื่อ Icon เป็น Component
   const renderIcon = (iconName: string) => {
@@ -153,40 +167,8 @@ export default function Home() {
     { q: "เครื่องเซ่นไหว้และป้ายชื่อต้องเตรียมไหม?", a: "ไม่ต้องเตรียม ทางค่ายมีบริการให้พร้อม" }
   ];
 
-  // 🌟 Schema Markup สำหรับ SEO Local Business 🌟
-  // ข้อมูลส่วนนี้จะช่วยให้ Google เข้าใจโครงสร้างเว็บเราและดันอันดับ "ค่ายลูกเสือราชบุรี" ได้ดีขึ้นมาก
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "name": "ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี",
-    "alternateName": "ค่ายศุภมาศ",
-    "description": "ศูนย์ฝึกอบรมเยาวชนและค่ายลูกเสือที่ได้มาตรฐานที่สุดในจังหวัดราชบุรี กิจกรรมผจญภัยครบครัน ปลอดภัย 100%",
-    "url": "https://www.suppamascamp.me", // ใส่โดเมนจริงของคุณครู
-    "telephone": "+66865515110",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "ต.หนองกวาง",
-      "addressLocality": "อ.โพธาราม",
-      "addressRegion": "จ.ราชบุรี",
-      "postalCode": "70120",
-      "addressCountry": "TH"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": "13.758768997131973", // สามารถใส่ละติจูดจริงได้
-      "longitude": "99.57713877516328"  // สามารถใส่ลองจิจูดจริงได้
-    },
-    "image": displaySlides[0],
-    "priceRange": "$$"
-  };
-
   return (
     <div className="relative font-sans antialiased text-slate-900 bg-white">
-      {/* 🚀 ฝัง JSON-LD เพื่อทำ SEO แบบเจาะลึก */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
 
       {/* 1. Hero Section */}
       <section id="home" className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden pt-20 pb-12">
@@ -200,7 +182,7 @@ export default function Home() {
             >
               <img 
                 src={slideUrl} 
-                alt={`ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี รูปที่ ${index + 1}`} // SEO: อัปเดต alt tag
+                alt={`ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี รูปที่ ${index + 1}`} 
                 className="w-full h-full object-cover transition-transform duration-[10000ms]" 
               />
             </div>
@@ -219,7 +201,6 @@ export default function Home() {
           <span className="inline-block py-1.5 px-4 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs md:text-sm font-semibold mb-6 backdrop-blur-sm uppercase tracking-widest">
             {displayTexts.badge}
           </span>
-          {/* SEO: H1 Tag คือจุดสำคัญที่สุด ใช้ดึงคำที่แอดมินตั้งมาแยกบรรทัด */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl leading-tight">
             {(() => {
               const titleStr = displayTexts.title || '';
@@ -280,7 +261,6 @@ export default function Home() {
 
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 text-orange-600 font-black uppercase text-xs tracking-[0.3em]"><Heart className="w-4 h-4 fill-orange-500" /> Our Philosophy</div>
-              {/* SEO: H2 Tag */}
               <h2 className="text-3xl md:text-6xl font-black text-green-950 leading-none">กินอิ่ม นอนหลับ <br /> <span className="text-orange-500 italic underline decoration-green-800 decoration-8 underline-offset-8">พักสบาย คลายอารมณ์</span></h2>
               <p className="text-slate-500 text-lg leading-relaxed font-light italic border-l-4 border-orange-500 pl-6">"เราเชื่อว่าการเรียนรู้ที่ดีที่สุด เกิดขึ้นเมื่อเด็กๆ มีความสุขและรู้สึกปลอดภัย"</p>
               <p className="text-slate-600 leading-relaxed">ค่ายอนุสรณ์ศุภมาศ ราชบุรี เป็นศูนย์ฝึกอบรมในเครือโรงเรียนอนุสรณ์ศุภมาศ สมุทรสาคร มีเจตนารมย์เพื่อสร้างสถานที่ การเรียนรู้ท่ามกลางธรรมชาติบนเนื้อที่กว่า 50 ไร่ เพื่อหล่อหลอมเยาวชนให้เป็นคนดีมีวินัย ผ่านกิจกรรมลูกเสือที่สนุกและทันสมัย</p>
@@ -293,39 +273,48 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Staff Section */}
-       <section id="staff" className="py-24 bg-slate-50 scroll-mt-20">
+      {/* 4. 🌟 Staff Section (แสดงเฉพาะคนที่เลือก) 🌟 */}
+      <section id="staff" className="py-24 bg-slate-50 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-16 tracking-tight uppercase">คณะผู้บริหารและทีมงาน</h2>
+          <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-16 tracking-tight uppercase italic underline decoration-orange-500 decoration-8 underline-offset-[12px]">คณะผู้บริหารและทีมงาน</h2>
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { name: "นายมนตรี คงสกุลถาวร", pos: "ผู้อำนวยการค่ายอนุสรณ์ศุภมาศ" },
-              { name: "นายเฉลิมชัย คงสกุลถาวร", pos: "ฝ่ายหลักสูตรและการฝึกอบรม" },
-              { name: "นายสหัส บ่อขุนทด", pos: "หัวหน้าทีมกิจกรรมและวิทยากร" },
-              { name: "นายสุรินทร์ ครบเบญจะ", pos: "ฝ่ายพยาบาลและกู้ชีพ (สว่างราชบุรี)" }
-            ].map((person, idx) => (
-              <div key={idx} className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-white hover:border-orange-500 transition-all group relative overflow-hidden">
+            {homeStaff.map((person: any, idx: number) => (
+              <div key={idx} className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-white hover:border-orange-500 transition-all group relative overflow-hidden flex flex-col items-center">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-full -mr-12 -mt-12 group-hover:scale-[10] transition-transform duration-700 ease-in-out opacity-20"></div>
-                <div className="w-20 h-20 bg-green-100 rounded-3xl mx-auto mb-6 flex items-center justify-center text-green-700 group-hover:bg-orange-500 group-hover:text-white transition-colors relative z-10"><UserCheck className="w-10 h-10" /></div>
-                <h3 className="text-lg font-black text-slate-800 mb-2 relative z-10">{person.name}</h3>
-                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest relative z-10 leading-tight">{person.pos}</p>
+                
+                {/* ส่วนรูปภาพบุคลากร */}
+                <div className="w-24 h-24 bg-green-50 rounded-3xl mb-8 flex items-center justify-center text-green-700 group-hover:bg-orange-500 group-hover:text-white transition-colors relative z-10 border border-green-100 overflow-hidden shadow-inner shrink-0">
+                  {person.img ? (
+                    <img src={person.img} alt={person.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <UserCheck className="w-12 h-12" />
+                  )}
+                </div>
+
+                <h3 className="text-xl font-black text-slate-800 mb-2 relative z-10 leading-tight h-14 flex items-center justify-center w-full text-center">{person.name}</h3>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] relative z-10 leading-relaxed border-t border-slate-50 pt-4 w-full">{person.pos}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-16 bg-[#114e2d] rounded-[2rem] md:rounded-[4rem] p-4 md:p-5 pr-4 md:pr-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 border border-green-800/50 max-w-5xl mx-auto">
-             <div className="flex flex-col md:flex-row items-center gap-5 md:gap-6 w-full text-center md:text-left">
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-[1.2rem] md:rounded-[1.8rem] bg-white/10 flex items-center justify-center border border-white/20 shrink-0">
-                   <Users className="w-8 h-8 md:w-10 md:h-10 text-[#ff6600]" />
+          {/* แถบสรุปทีมงานด้านล่าง (Green Bar) พร้อมปุ่มลิงก์ไปหน้าผังองค์กรเต็มรูปแบบ */}
+          <div className="mt-16 bg-[#114e2d] rounded-[2rem] md:rounded-full p-2 pr-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 border border-green-800/50 max-w-5xl mx-auto overflow-hidden relative group/bar">
+             <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-transparent opacity-0 group-hover/bar:opacity-100 transition-opacity"></div>
+             <div className="flex flex-col md:flex-row items-center gap-5 md:gap-8 w-full text-center md:text-left p-4">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shrink-0 shadow-2xl">
+                   <Users className="w-8 h-8 md:w-10 md:h-10 text-orange-500" />
                 </div>
-                <div>
-                   <h4 className="text-xl md:text-2xl font-bold text-white mb-1 tracking-wide">ทีมงานวิทยากรและสตาฟกว่า 30 ท่าน</h4>
-                   <p className="text-green-50/90 text-sm md:text-base font-light">พร้อมดูแลนักเรียนทุกคนอย่างใกล้ชิด ตลอด 24 ชั่วโมง</p>
+                <div className="relative z-10">
+                   <h4 className="text-xl md:text-2xl font-black text-white mb-1 tracking-wide uppercase italic">{displayTexts.staffSummaryTitle}</h4>
+                   <p className="text-green-200/80 text-sm md:text-base font-medium">{displayTexts.staffSummaryDesc}</p>
                 </div>
              </div>
-             <button className="w-full md:w-auto bg-[#ff6600] hover:bg-[#e65c00] px-8 py-4 rounded-[1.5rem] md:rounded-full font-bold text-white transition-transform active:scale-95 shadow-lg whitespace-nowrap">
+             
+             {/* 🌟 เปลี่ยนปุ่มนี้ให้ลิงก์ไปยังไฟล์ /staff 🌟 */}
+             <a href="/staff" className="w-full md:w-auto bg-orange-500 hover:bg-white hover:text-orange-600 px-10 py-4 rounded-full font-black text-white transition-all active:scale-95 shadow-xl whitespace-nowrap z-10 uppercase text-xs tracking-widest cursor-pointer text-center block">
                 ดูผังองค์กรทั้งหมด
-             </button>
+             </a>
           </div>
         </div>
       </section>
@@ -338,7 +327,7 @@ export default function Home() {
                 <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-4 uppercase">{displayTexts.activityTitle}</h2>
                 <p className="text-orange-500 text-lg font-bold italic leading-none">{displayTexts.activitySubtitle}</p>
              </div>
-             <button onClick={() => document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' })} className="text-green-800 font-bold border-b-2 border-green-800 pb-1 hover:text-orange-500 transition-all flex items-center gap-2 mx-auto md:mx-0 shrink-0">ดูรูปทั้งหมด <ArrowRight className="w-4 h-4" /></button>
+             <button onClick={() => document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' })} className="text-green-800 font-bold border-b-2 border-green-800 pb-1 hover:text-orange-500 transition-all flex items-center gap-2 mx-auto md:mx-0 shrink-0">ดูรูปกิจกรรมทั้งหมดในแกลลอรี่ <ArrowRight className="w-4 h-4" /></button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -431,7 +420,7 @@ export default function Home() {
                 <div className="mt-4 bg-white/10 py-2 rounded-xl border border-white/5 inline-block px-4"><p className="text-orange-300 text-[11px] font-black tracking-widest uppercase">Best Value Package</p></div>
               </div>
               <ul className="space-y-4 mb-10 flex-1 text-white">
-                {["ทักษะลูกเสือ / บุกเบิก", "ประกอบอาหาร / สูทกรรม", "ผจญภัย / รอบกองไฟ", "เดินทางไกล / สำรวจ", "อาหาร 7 มื้อ + ที่พัก 2 คืน", "พยาบาลสว่างราชบุรี 24 ชม."].map((item, idx) => (
+                {["ทักษะลูกเสือ / บุกเบิก", "ประกอบอาหาร / สูทกรรม", "ผจญภัย /รอบกองไฟ", "เดินทางไกล / สำรวจ", "อาหาร 7 มื้อ + ที่พัก 2 คืน", "พยาบาลสว่างราชบุรี 24 ชม."].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3 text-sm font-bold"><CheckCircle2 className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" /> <span>{item}</span></li>
                 ))}
               </ul>
@@ -470,7 +459,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
              {displayImages.map((img, i) => (
                <div key={img.id || i} className={`group cursor-pointer relative overflow-hidden rounded-[2rem] shadow-xl transition-all duration-700 hover:-translate-y-2 ${i % 3 === 0 ? 'h-72' : 'h-48'}`} onClick={() => setSelectedImage(img.src)}>
-                 <img src={img.src} alt={img.name || `ภาพบรรยากาศค่ายลูกเสืออนุสรณ์ศุภมาศ ${i+1}`} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" />
+                 <img src={img.src} alt={img.name || img.alt} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" />
                  
                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
                     <p className="text-white text-lg md:text-xl font-black tracking-wide mb-2 drop-shadow-md leading-tight">
@@ -552,7 +541,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. Contact & Map Section (ปรับปรุงให้มี Thumbnail Map) */}
+      {/* 10. Contact & Map Section */}
       <section id="contact" className="py-24 scroll-mt-20 overflow-hidden bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
@@ -587,11 +576,11 @@ export default function Home() {
                 {/* 🗺️ Thumbnail แผนที่ภาพวาด (ลอยทับอยู่มุมขวาล่าง) */}
                 <div 
                   className="absolute bottom-8 right-8 w-40 h-40 md:w-48 md:h-48 bg-white p-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-10 cursor-zoom-in group/map transform hover:scale-105 transition-all duration-300 border-4 border-white"
-                  onClick={() => setSelectedImage('/map.png')} 
+                  onClick={() => setSelectedImage('/map.jpg')} 
                   title="คลิกเพื่อขยายแผนที่ภาพวาด"
                 >
                   <div className="w-full h-full rounded-[1.5rem] overflow-hidden relative">
-                    <img src="/map.png" alt="แผนที่ภาพวาดค่ายลูกเสือ" className="w-full h-full object-cover group-hover/map:scale-110 transition-transform duration-500" />
+                    <img src="/map.jpg" alt="แผนที่ภาพวาดค่ายลูกเสือ" className="w-full h-full object-cover group-hover/map:scale-110 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center opacity-0 group-hover/map:opacity-100 transition-opacity">
                       <ZoomIn className="w-8 h-8 text-white drop-shadow-md mb-1" />
                       <span className="text-white text-[10px] font-black uppercase tracking-widest drop-shadow-md">คลิกเพื่อซูม</span>

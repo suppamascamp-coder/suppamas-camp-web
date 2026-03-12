@@ -7,16 +7,16 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // เพิ่มเมนู 'รู้จักกับเรา' และ 'บุคลากร' เข้าไปในรายการ
+  // 📌 แก้ไข: เติม "/" นำหน้า "#" เพื่อให้ทุกลิงก์กระโดดกลับไปอ้างอิงจากหน้าแรกเสมอ
   const menuItems = [
-    { name: 'หน้าแรก', href: '#home' },
-    { name: 'รู้จักกับเรา', href: '#about' },
-    { name: 'บุคลากร', href: '#staff' },
-    { name: 'กิจกรรม', href: '#activities' },
-    { name: 'สิ่งอำนวยความสะดวก', href: '#facilities' },
-    { name: 'แพ็กเกจ', href: '#packages' },
-    { name: 'ภาพบรรยากาศ', href: '#gallery' },
-    { name: 'ติดต่อเรา', href: '#contact' },
+    { name: 'หน้าแรก', href: '/#home' },
+    { name: 'รู้จักกับเรา', href: '/#about' },
+    { name: 'บุคลากร', href: '/#staff' },
+    { name: 'กิจกรรม', href: '/#activities' },
+    { name: 'สิ่งอำนวยความสะดวก', href: '/#facilities' },
+    { name: 'แพ็กเกจ', href: '/#packages' },
+    { name: 'ภาพบรรยากาศ', href: '/#gallery' },
+    { name: 'ติดต่อเรา', href: '/#contact' },
   ];
 
   useEffect(() => {
@@ -39,20 +39,20 @@ export default function Navbar() {
           {/* Desktop Menu */}
           <nav className="hidden xl:flex space-x-5">
             {menuItems.map((item) => (
-              <a 
+              <Link 
                 key={item.name} 
                 href={item.href} 
                 className={`font-medium text-[13px] uppercase tracking-wide transition-colors hover:text-orange-500 ${isScrolled ? 'text-gray-600' : 'text-gray-200'}`}
               >
                 {item.name}
-              </a>
+              </Link>
             ))}
           </nav>
 
           <div className="hidden md:block">
-             <a href="#contact" className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-full font-semibold transition-all shadow-md flex items-center gap-2 text-sm">
+             <Link href="/#contact" className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-full font-semibold transition-all shadow-md flex items-center gap-2 text-sm">
                จองค่าย <ChevronRight className="w-4 h-4" />
-             </a>
+             </Link>
           </div>
 
           <div className="xl:hidden flex items-center">
@@ -67,18 +67,18 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="xl:hidden absolute top-full left-0 w-full bg-white shadow-xl flex flex-col items-center py-6 space-y-4 border-t border-gray-100 max-h-screen overflow-y-auto">
           {menuItems.map((item) => (
-            <a 
+            <Link 
               key={item.name} 
               href={item.href} 
               onClick={() => setIsMobileMenuOpen(false)} 
               className="text-gray-800 font-medium w-full text-center py-2 hover:text-orange-500 transition-colors"
             >
               {item.name}
-            </a>
+            </Link>
           ))}
-          <a href="#contact" onClick={() => setIsMobileMenuOpen(false)} className="bg-orange-500 text-white px-8 py-3 rounded-full font-semibold w-10/12 mt-4 text-center">
+          <Link href="/#contact" onClick={() => setIsMobileMenuOpen(false)} className="bg-orange-500 text-white px-8 py-3 rounded-full font-semibold w-10/12 mt-4 text-center">
             จองค่ายทันที
-          </a>
+          </Link>
         </div>
       )}
     </header>

@@ -4,13 +4,13 @@ import {
   LayoutDashboard, Home, Tent, Package, CalendarDays, 
   Image as ImageIcon, Settings, Menu, X, Bell, Plus, 
   Trash2, Search, TrendingUp, Users, Upload, Eye, 
-  Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit, Save, Type, Compass, ExternalLink, BedDouble, Utensils, Info
+  Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit, Save, Type, Compass, ExternalLink, BedDouble, Utensils, Info, UserCheck, Navigation
 } from 'lucide-react';
 
 import { db, storage, auth } from '../../src/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { getDoc, setDoc, doc, serverTimestamp, collection, query, orderBy, getDocs, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
 // ============================================================================
 // 🗜️ ฟังก์ชันบีบอัดรูปภาพอัจฉริยะ (Image Compression Utility)
@@ -56,7 +56,6 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
     reader.onerror = (err) => reject(err);
   });
 };
-// ============================================================================
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -67,11 +66,13 @@ export default function AdminPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
-    { id: 'dashboard', label: 'แดชบอร์ด', icon: LayoutDashboard },
+    { id: 'dashboard', label: 'แดชบอร์ดภาพรวม', icon: LayoutDashboard },
     { id: 'homepage', label: 'จัดการหน้าแรก', icon: Home },
     { id: 'activities', label: 'จัดการกิจกรรม', icon: Tent },
-    { id: 'bookings', label: 'ปฏิทินการจอง', icon: CalendarDays },
+    { id: 'packages', label: 'จัดการแพ็กเกจ', icon: Package },
+    { id: 'bookings', label: 'จัดการการจอง', icon: CalendarDays },
     { id: 'gallery', label: 'จัดการแกลลอรี่', icon: ImageIcon },
+    { id: 'settings', label: 'ตั้งค่าระบบ', icon: Settings },
   ];
 
   const handleLogin = async (e) => {
@@ -89,12 +90,12 @@ export default function AdminPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="fixed inset-0 z-[100] bg-slate-50 flex items-center justify-center p-4 overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-96 bg-[#064e3b] transform -skew-y-6 -translate-y-32"></div>
+      <div className="fixed inset-0 z-[100] bg-[#064e3b] flex items-center justify-center p-4 overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-96 bg-[#043d2e] transform -skew-y-6 -translate-y-32"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-[100px]"></div>
         <div className="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row overflow-hidden relative z-10 animate-in fade-in zoom-in-95 duration-500 border border-slate-100">
           <div className="w-full md:w-5/12 bg-[#064e3b] p-10 text-white flex flex-col justify-between relative overflow-hidden hidden md:flex">
-             <div className="absolute inset-0 bg-black/20 opacity-20 bg-cover bg-center mix-blend-overlay"></div>
+             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?q=80&w=800')] opacity-20 bg-cover bg-center mix-blend-overlay"></div>
              <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-12 opacity-80">
                   <Tent className="w-8 h-8 text-orange-500" />
@@ -102,6 +103,9 @@ export default function AdminPage() {
                 </div>
                 <h2 className="text-4xl font-black mb-4 leading-tight">Admin<br/>Workspace</h2>
                 <p className="text-green-100/70 font-light leading-relaxed">ระบบจัดการเนื้อหาและการจองสำหรับเจ้าหน้าที่ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี</p>
+             </div>
+             <div className="relative z-10 flex items-center gap-3 text-sm font-medium text-green-200 bg-black/20 p-4 rounded-2xl backdrop-blur-sm border border-white/10">
+                <ShieldCheck className="w-5 h-5 text-orange-400" /> Secure Connection
              </div>
           </div>
           <div className="w-full md:w-7/12 p-8 md:p-12 lg:p-16 bg-white">
@@ -168,7 +172,7 @@ export default function AdminPage() {
   );
 
   const DashboardView = () => (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { title: 'ยอดจองที่รออนุมัติ', value: '12', icon: CalendarDays, color: 'text-orange-500', bg: 'bg-orange-100' },
@@ -188,65 +192,48 @@ export default function AdminPage() {
     </div>
   );
 
-  // ==========================================
-  // 🎯 VIEW: จัดการหน้าแรก (Homepage Management)
-  // ==========================================
   const HomepageView = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
-    // ข้อมูลเริ่มต้น
     const defaultTexts = {
       badge: 'WELCOME || เปิดให้จองแล้ววันนี้!!',
       title: 'ค่ายลูกเสือ อนุสรณ์ศุภมาศ ราชบุรี',
-      subtitle: 'ศูนย์ฝึกอบรมเยาวชนที่เน้นความปลอดภัยและคุณภาพอาหาร สร้างวินัยผ่านความสุข ในบรรยากาศธรรมชาติที่สมบูรณ์ที่สุด',
-      stat1Val: '12+', stat1Label: 'ปีแห่งประสบการณ์',
-      stat2Val: '17+', stat2Label: 'ฐานกิจกรรมผจญภัย',
-      stat3Val: '600', stat3Label: 'ความจุเรือนนอน (คน)',
-      stat4Val: '100%', stat4Label: 'มาตรฐานความปลอดภัย',
-      activityTitle: 'HIGH-IMPACT ACTIVITIES',
-      activitySubtitle: '"สนุก ท้าทาย ได้ทักษะชีวิตที่แท้จริง"',
-      facilityTitle: 'SAFETY & COMFORT',
-      facilitySubtitle: '"ความสะอาดและปลอดภัยคือหัวใจของค่ายอนุสรณ์ศุภมาศ"'
+      subtitle: 'ศูนย์ฝึกอบรมเยาวชนที่เน้นความปลอดภัยและคุณภาพอาหาร...',
+      staffSummaryTitle: 'ทีมงานวิทยากรและสตาฟกว่า 30 ท่าน',
+      staffSummaryDesc: 'พร้อมดูแลนักเรียนทุกคนอย่างใกล้ชิด ตลอด 24 ชั่วโมง'
     };
-
-    const defaultCards = [
-      { title: 'ฐานกิจกรรมผจญภัย', desc: 'ทดสอบความกล้ากับสไลเดอร์น้ำสูง 10 เมตร, โดดหอ และฐานเชือกกว่า 10 รูปแบบ', img: 'https://images.unsplash.com/photo-1533240332313-0cb49f47c422?auto=format&fit=crop&q=80&w=800' },
-      { title: 'กิจกรรมรอบกองไฟ', desc: 'ลานกิจกรรมมาตรฐานจุได้ 1-600 คน พร้อมระบบแสงสีเสียงเต็มรูปแบบ และบริการ LIVE Streaming ให้ผู้ปกครองดูจากที่บ้าน', img: 'https://images.unsplash.com/photo-1504280655536-2605761a54dc?auto=format&fit=crop&q=80&w=800' },
-      { title: 'ทักษะชีวิตและทีมเวิร์ค', desc: 'วิชาประกอบอาหาร (สูทกรรม), ปฐมพยาบาล และการแก้ปัญหาร่วมกันผ่านเกมสถานการณ์จำลอง', img: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&q=80&w=800' },
-      { title: 'กิจกรรมใหม่', desc: 'เพิ่มคำอธิบายกิจกรรมที่น่าสนใจตรงนี้...', img: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=800' }
-    ];
-
-    const defaultFeatures = [
-      { title: 'ความปลอดภัย 24 ชม.', desc: 'กล้อง CCTV 40 จุด รอบค่าย และหน่วยพยาบาลสแตนด์บาย', icon: 'ShieldCheck' },
-      { title: 'เรือนนอนมาตรฐาน', desc: 'แยกสัดส่วนชาย-หญิงชัดเจน ห้องน้ำสะอาดเพียงพอกับจำนวนเด็ก', icon: 'BedDouble' },
-      { title: 'โรงอาหารสะอาด 5 ดาว', desc: 'อาหารปรุงสุกใหม่ ถูกหลักโภชนาการ ปริมาณเต็มอิ่ม', icon: 'Utensils' }
-    ];
 
     const [texts, setTexts] = useState(defaultTexts);
     const [highlightCards, setHighlightCards] = useState([{}, {}, {}, {}]); 
-    const [featureCards, setFeatureCards] = useState(defaultFeatures);
-    const [slides, setSlides] = useState([]);
+    const [featureCards, setFeatureCards] = useState([]);
     
+    const [staffList, setStaffList] = useState([
+      { name: "นายมนตรี คงสกุลถาวร", pos: "ผู้อำนวยการค่ายอนุสรณ์ศุภมาศ", img: "", showOnHome: true },
+      { name: "นายเฉลิมชัย คงสกุลถาวร", pos: "ฝ่ายหลักสูตรและการฝึกอบรม", img: "", showOnHome: true },
+      { name: "นายสหัส บ่อขุนทด", pos: "หัวหน้าทีมกิจกรรมและวิทยากร", img: "", showOnHome: true },
+      { name: "นายสุรินทร์ ครบเบญจะ", pos: "ฝ่ายพยาบาลและกู้ชีพ (สว่างราชบุรี)", img: "", showOnHome: true }
+    ]);
+    const [slides, setSlides] = useState([]);
+
     const fileInputRef = useRef(null);
 
     useEffect(() => {
-      const fetchHomepageData = async () => {
+      const fetchData = async () => {
         try {
           const docRef = doc(db, "settings", "homepage");
           const docSnap = await getDoc(docRef);
-          
           if (docSnap.exists()) {
             const data = docSnap.data();
             if (data.texts) setTexts({ ...defaultTexts, ...data.texts });
-            
             if (data.highlightCards) {
                let cards = data.highlightCards;
                while(cards.length < 4) cards.push({ title: '', desc: '', img: '' });
                setHighlightCards(cards.slice(0, 4));
             }
             if (data.featureCards) setFeatureCards(data.featureCards);
+            if (data.staffList) setStaffList(data.staffList);
             if (data.slides) setSlides(data.slides);
           }
         } catch (error) {
@@ -255,22 +242,22 @@ export default function AdminPage() {
           setIsLoading(false);
         }
       };
-      fetchHomepageData();
+      fetchData();
     }, []);
 
-    const handleSaveTexts = async (e) => {
+    const handleSave = async (e) => {
       e.preventDefault();
       setIsSaving(true);
       try {
         await setDoc(doc(db, "settings", "homepage"), { 
           texts, 
-          highlightCards,
+          highlightCards, 
           featureCards,
+          staffList,
           slides
         }, { merge: true });
         alert("บันทึกข้อมูลหน้าแรกเรียบร้อยแล้ว!");
       } catch (error) {
-        console.error("Error saving homepage:", error);
         alert("เกิดข้อผิดพลาดในการบันทึก");
       } finally {
         setIsSaving(false);
@@ -281,29 +268,26 @@ export default function AdminPage() {
       if (!file) return;
       setIsUploading(true);
       try {
-        const compressedFile = await compressImage(file, 800, 0.8);
-        const storageRef = ref(storage, `highlights/card_${index}_${Date.now()}.jpg`);
-        const uploadTask = await uploadBytesResumable(storageRef, compressedFile);
-        const downloadURL = await getDownloadURL(uploadTask.ref);
+         const compressedFile = await compressImage(file, 800, 0.8);
+         const storageRef = ref(storage, `highlights/card_${index}_${Date.now()}.jpg`);
+         const uploadTask = await uploadBytesResumable(storageRef, compressedFile);
+         const downloadURL = await getDownloadURL(uploadTask.ref);
 
-        const newCards = [...highlightCards];
-        newCards[index].img = downloadURL;
-        setHighlightCards(newCards);
-        
-        await setDoc(doc(db, "settings", "homepage"), { highlightCards: newCards }, { merge: true });
-        alert("อัปโหลดรูปภาพการ์ดสำเร็จ!");
+         const newCards = [...highlightCards];
+         newCards[index].img = downloadURL;
+         setHighlightCards(newCards);
+         
+         await setDoc(doc(db, "settings", "homepage"), { highlightCards: newCards }, { merge: true });
       } catch (error) {
-        console.error("Upload card image error:", error);
-        alert("อัปโหลดไม่สำเร็จ");
+         alert("อัปโหลดไม่สำเร็จ");
       } finally {
-        setIsUploading(false);
+         setIsUploading(false);
       }
     };
 
     const handleSlideUpload = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       setIsUploading(true);
       try {
         const compressedFile = await compressImage(file, 1920, 0.8);
@@ -311,17 +295,11 @@ export default function AdminPage() {
         const uploadTask = await uploadBytesResumable(storageRef, compressedFile);
         const downloadURL = await getDownloadURL(uploadTask.ref);
 
-        const newSlide = {
-          url: downloadURL,
-          storagePath: uploadTask.ref.fullPath,
-          createdAt: new Date().toISOString()
-        };
-
+        const newSlide = { url: downloadURL, storagePath: uploadTask.ref.fullPath, createdAt: new Date().toISOString() };
         const updatedSlides = [...slides, newSlide];
         await setDoc(doc(db, "settings", "homepage"), { slides: updatedSlides }, { merge: true });
         setSlides(updatedSlides);
       } catch (error) {
-        console.error("Upload error:", error);
         alert("อัปโหลดไม่สำเร็จ กรุณาลองใหม่");
       } finally {
         setIsUploading(false);
@@ -334,210 +312,101 @@ export default function AdminPage() {
         try {
           const updatedSlides = slides.filter((_, i) => i !== index);
           await setDoc(doc(db, "settings", "homepage"), { slides: updatedSlides }, { merge: true });
-          
           if (storagePath) {
             const fileRef = ref(storage, storagePath);
             await deleteObject(fileRef);
           }
           setSlides(updatedSlides);
-        } catch (error) {
-          console.error("Delete error:", error);
-          alert("ลบไม่สำเร็จ");
-        }
+        } catch (error) { alert("ลบไม่สำเร็จ"); }
       }
     };
 
-    const addFeatureCard = () => {
-      setFeatureCards([...featureCards, { title: 'บริการใหม่', desc: 'รายละเอียดสั้นๆ...', icon: 'Info' }]);
-    };
-
+    const addFeatureCard = () => setFeatureCards([...featureCards, { title: 'บริการใหม่', desc: 'รายละเอียดสั้นๆ...', icon: 'Info' }]);
     const deleteFeatureCard = (index) => {
       if(window.confirm("ยืนยันการลบการ์ดสิ่งอำนวยความสะดวกนี้?")) {
         setFeatureCards(featureCards.filter((_, i) => i !== index));
       }
     };
 
-    if (isLoading) {
-      return <div className="flex justify-center items-center h-64"><Loader2 className="w-10 h-10 animate-spin text-orange-500" /></div>;
-    }
+    const addStaff = () => setStaffList([...staffList, { name: "", pos: "", img: "", showOnHome: false }]);
+    const deleteStaff = (idx) => {
+        if(window.confirm("ลบรายชื่อท่านนี้?")) setStaffList(staffList.filter((_, i) => i !== idx));
+    };
+    const handleStaffChange = (idx, field, val) => {
+        const newStaff = [...staffList];
+        newStaff[idx][field] = val;
+        setStaffList(newStaff);
+    };
+    const handleStaffImage = async (idx, file) => {
+        if (!file) return;
+        setIsUploading(true);
+        try {
+            const compressed = await compressImage(file, 400, 0.8);
+            const storageRef = ref(storage, `staff/person_${idx}_${Date.now()}.jpg`);
+            const task = await uploadBytesResumable(storageRef, compressed);
+            const url = await getDownloadURL(task.ref);
+            handleStaffChange(idx, 'img', url);
+        } catch (error) {
+            alert("อัปโหลดภาพบุคลากรไม่สำเร็จ");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    if (isLoading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-orange-500 w-12 h-12" /></div>;
 
     return (
-      <div className="space-y-10 animate-in fade-in duration-500 pb-20">
-        <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight uppercase italic underline decoration-orange-500 decoration-4 underline-offset-8">จัดการหน้าแรก</h2>
-          <p className="text-slate-400 text-sm mt-3 font-medium">ปรับแต่งข้อความต้อนรับ ตัวเลขสถิติ และรูปภาพสไลด์โชว์พื้นหลัง</p>
+      <div className="space-y-12 animate-in fade-in pb-24">
+        <div className="flex justify-between items-end">
+           <div>
+              <h2 className="text-3xl font-black italic underline decoration-orange-500 decoration-4">จัดการหน้าแรก</h2>
+              <p className="text-slate-500 mt-2">ปรับแต่งเนื้อหาทั้งหมดที่จะแสดงบนเว็บไซต์หน้าหลัก</p>
+           </div>
+           <button onClick={handleSave} disabled={isSaving || isUploading} className="bg-green-950 text-white px-8 py-3 rounded-2xl font-black shadow-xl hover:bg-orange-500 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50">
+              {isSaving ? <Loader2 className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />} บันทึกการตั้งค่า
+           </button>
         </div>
-
-        <form onSubmit={handleSaveTexts} className="space-y-10">
-          
-          {/* --- Section 1: Hero & Trust Bar --- */}
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 relative">
-            <h3 className="text-xl font-black text-green-950 mb-6 flex items-center gap-2">
-              <Type className="w-5 h-5 text-orange-500" /> ข้อความหลัก (Hero Section)
-            </h3>
-            
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">ป้ายกำกับ (Badge)</label>
-                <input type="text" value={texts.badge} onChange={e => setTexts({...texts, badge: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-bold text-sm" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">หัวข้อหลัก (Main Title)</label>
-                <input type="text" value={texts.title} onChange={e => setTexts({...texts, title: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-black text-lg text-green-950" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">คำบรรยายย่อย (Subtitle)</label>
-                <textarea rows="3" value={texts.subtitle} onChange={e => setTexts({...texts, subtitle: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 font-medium text-sm resize-none"></textarea>
-              </div>
-
-              <div className="border-t border-slate-100 pt-6 mt-6">
-                <h3 className="text-lg font-black text-green-950 mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-orange-500" /> ตัวเลขสถิติ (Trust Bar)
-                </h3>
+        
+        <form onSubmit={handleSave} className="space-y-12">
+          {/* --- จัดการข้อความหลัก --- */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+            <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-green-950"><Type className="text-orange-500" /> ข้อความหลักและตัวเลข</h3>
+            <div className="grid gap-5">
+              <div><label className="text-xs font-bold text-slate-500 uppercase">ป้ายกำกับด้านบน</label><input type="text" value={texts.badge} onChange={e => setTexts({...texts, badge: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-orange-500 mt-1" /></div>
+              <div><label className="text-xs font-bold text-slate-500 uppercase">หัวข้อหลัก</label><input type="text" value={texts.title} onChange={e => setTexts({...texts, title: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-orange-500 mt-1" /></div>
+              <div><label className="text-xs font-bold text-slate-500 uppercase">คำบรรยายย่อย</label><textarea rows={2} value={texts.subtitle} onChange={e => setTexts({...texts, subtitle: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-orange-500 mt-1" /></div>
+            </div>
+            <div className="border-t border-slate-100 pt-6 mt-6">
+                <h3 className="text-lg font-black text-green-950 mb-4 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-orange-500" /> ตัวเลขสถิติ (Trust Bar)</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[1, 2, 3, 4].map(num => (
                     <div key={num} className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                      <input type="text" value={texts[`stat${num}Val`]} onChange={e => setTexts({...texts, [`stat${num}Val`]: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-green-800 outline-none focus:bg-white rounded" placeholder={`ค่าที่ ${num}`} />
-                      <input type="text" value={texts[`stat${num}Label`]} onChange={e => setTexts({...texts, [`stat${num}Label`]: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none focus:bg-white rounded" placeholder="คำอธิบาย" />
+                      <input type="text" value={texts[`stat${num}Val`]} onChange={e => setTexts({...texts, [`stat${num}Val`]: e.target.value})} className="w-full bg-transparent font-black text-xl text-center mb-1 text-green-800 outline-none focus:bg-white rounded" />
+                      <input type="text" value={texts[`stat${num}Label`]} onChange={e => setTexts({...texts, [`stat${num}Label`]: e.target.value})} className="w-full bg-transparent text-[10px] font-bold text-center text-slate-400 uppercase outline-none focus:bg-white rounded" />
                     </div>
                   ))}
                 </div>
-              </div>
             </div>
           </div>
 
-          {/* --- Section 2: 4 Highlight Cards --- */}
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 border-b border-slate-100 pb-6">
-                <div>
-                  <h3 className="text-xl font-black text-green-950 flex items-center gap-2">
-                    <Compass className="w-5 h-5 text-orange-500" /> ส่วนกิจกรรมไฮไลท์ (4 การ์ด)
-                  </h3>
-                  <p className="text-sm text-slate-500 mt-1">ส่วนนี้จะแสดงผลอยู่ใต้แถบตัวเลขสถิติบนหน้าแรก</p>
-                </div>
-                <div className="flex flex-col gap-3 min-w-[300px]">
-                   <div>
-                     <label className="text-[10px] font-bold text-slate-400 uppercase">หัวข้อใหญ่ (Title)</label>
-                     <input type="text" value={texts.activityTitle} onChange={e => setTexts({...texts, activityTitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-black text-sm text-green-900" />
-                   </div>
-                   <div>
-                     <label className="text-[10px] font-bold text-slate-400 uppercase">คำบรรยายย่อย (Subtitle)</label>
-                     <input type="text" value={texts.activitySubtitle} onChange={e => setTexts({...texts, activitySubtitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold text-sm text-orange-500" />
-                   </div>
-                </div>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-               {highlightCards.map((card, index) => (
-                 <div key={index} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col gap-4">
-                    <div className="relative h-32 bg-slate-200 rounded-xl overflow-hidden group border border-slate-300">
-                       <img src={card.img} alt={card.title} className="w-full h-full object-cover" />
-                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                          <label className="cursor-pointer bg-white text-slate-800 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 hover:bg-orange-500 hover:text-white transition-colors">
-                             <Upload className="w-4 h-4" /> เปลี่ยนรูป
-                             <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCardImageUpload(index, e.target.files[0])} />
-                          </label>
-                       </div>
-                    </div>
-                    <div>
-                       <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">ชื่อการ์ด</label>
-                       <input type="text" value={card.title} onChange={e => { const n = [...highlightCards]; n[index].title = e.target.value; setHighlightCards(n); }} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg font-bold text-sm" />
-                    </div>
-                    <div>
-                       <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">คำอธิบาย</label>
-                       <textarea rows="3" value={card.desc} onChange={e => { const n = [...highlightCards]; n[index].desc = e.target.value; setHighlightCards(n); }} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs resize-none"></textarea>
-                    </div>
-                 </div>
-               ))}
-             </div>
-          </div>
-
-          {/* --- Section 3: Feature Cards (Safety & Comfort) --- */}
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 border-b border-slate-100 pb-6 gap-6">
-              <div>
-                <h3 className="text-xl font-black flex items-center gap-2 text-green-950"><ShieldCheck className="w-5 h-5 text-orange-500" /> สิ่งอำนวยความสะดวก (Safety & Comfort)</h3>
-                <p className="text-sm text-slate-500 font-medium mt-1">คุณครูสามารถเพิ่มการ์ดนำเสนอความพร้อมของค่ายได้ไม่จำกัดที่นี่ครับ</p>
-              </div>
-              <div className="flex flex-col gap-3 min-w-[300px]">
-                   <div>
-                     <label className="text-[10px] font-bold text-slate-400 uppercase">หัวข้อใหญ่ (Title)</label>
-                     <input type="text" value={texts.facilityTitle} onChange={e => setTexts({...texts, facilityTitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-black text-sm text-green-900" />
-                   </div>
-                   <div>
-                     <label className="text-[10px] font-bold text-slate-400 uppercase">คำบรรยายย่อย (Subtitle)</label>
-                     <input type="text" value={texts.facilitySubtitle} onChange={e => setTexts({...texts, facilitySubtitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold text-sm text-green-600" />
-                   </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featureCards.map((card, i) => (
-                <div key={i} className="bg-slate-50 p-6 rounded-3xl border border-slate-200 shadow-sm relative group">
-                  <button type="button" onClick={() => deleteFeatureCard(i)} className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 z-10">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 text-orange-500 shrink-0">
-                      {card.icon === 'ShieldCheck' && <ShieldCheck />}
-                      {card.icon === 'BedDouble' && <BedDouble />}
-                      {card.icon === 'Utensils' && <Utensils />}
-                      {card.icon === 'Info' && <Info />}
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-[10px] font-black text-slate-400 uppercase">Icon Type</label>
-                      <select value={card.icon} onChange={e => { const n = [...featureCards]; n[i].icon = e.target.value; setFeatureCards(n); }} className="w-full bg-white border border-slate-200 rounded-lg font-bold text-xs p-1 outline-none">
-                        <option value="ShieldCheck">ความปลอดภัย</option>
-                        <option value="BedDouble">ที่พัก/นอน</option>
-                        <option value="Utensils">อาหาร/โรงครัว</option>
-                        <option value="Info">อื่นๆ/ข้อมูล</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <input type="text" value={card.title} onChange={e => { const n = [...featureCards]; n[i].title = e.target.value; setFeatureCards(n); }} className="w-full p-3 bg-white border border-slate-100 rounded-xl font-black text-sm text-slate-800" placeholder="หัวข้อการ์ด" />
-                    <textarea rows={3} value={card.desc} onChange={e => { const n = [...featureCards]; n[i].desc = e.target.value; setFeatureCards(n); }} className="w-full p-3 bg-white border border-slate-100 rounded-xl text-xs resize-none text-slate-500" placeholder="คำอธิบายสั้นๆ..."></textarea>
-                  </div>
-                </div>
-              ))}
-              
-              <button type="button" onClick={addFeatureCard} className="bg-green-50 border-2 border-dashed border-green-200 text-green-700 rounded-3xl font-black flex flex-col items-center justify-center gap-2 hover:bg-green-100 hover:border-green-300 transition-all min-h-[200px]">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm"><Plus className="w-6 h-6 text-green-600" /></div>
-                เพิ่มการ์ดใหม่
-              </button>
-            </div>
-          </div>
-
-          {/* --- Section 4: Hero Slides --- */}
+          {/* --- จัดการรูปภาพสไลด์พื้นหลัง --- */}
           <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-black text-green-950 flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-orange-500" /> ภาพพื้นหลัง (Slideshow)
-              </h3>
-              
+              <h3 className="text-xl font-black text-green-950 flex items-center gap-2"><ImageIcon className="w-5 h-5 text-orange-500" /> ภาพพื้นหลัง (Hero Slideshow)</h3>
               <input type="file" accept="image/*" ref={fileInputRef} onChange={handleSlideUpload} className="hidden" />
               <button type="button" onClick={() => fileInputRef.current.click()} disabled={isUploading} className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors disabled:opacity-50">
-                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} 
-                {isUploading ? 'กำลังอัปโหลด...' : 'เพิ่มรูปภาพ'}
+                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} {isUploading ? 'กำลังอัปโหลด...' : 'เพิ่มรูปภาพ'}
               </button>
             </div>
-
             {slides.length === 0 ? (
-              <div className="text-center py-16 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 text-slate-400">
-                <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="font-bold text-sm">ยังไม่มีรูปภาพสไลด์</p>
-              </div>
+              <div className="text-center py-16 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 text-slate-400"><ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-30" /><p className="font-bold text-sm">ยังไม่มีรูปภาพสไลด์</p></div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {slides.map((slide, index) => (
                   <div key={index} className="relative group rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[4/3] bg-slate-100">
                     <img src={slide.url} alt={`Slide ${index}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button type="button" onClick={() => handleDeleteSlide(index, slide.storagePath)} className="bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600 hover:scale-110 transition-all shadow-lg">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <button type="button" onClick={() => handleDeleteSlide(index, slide.storagePath)} className="bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600 hover:scale-110 transition-all shadow-lg"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ))}
@@ -545,11 +414,142 @@ export default function AdminPage() {
             )}
           </div>
 
-          {/* Floating Save Button */}
-          <div className="fixed bottom-8 right-8 z-[110]">
-             <button type="submit" disabled={isSaving || isUploading} className="bg-green-950 hover:bg-orange-500 text-white px-10 py-5 rounded-[2rem] font-black transition-all shadow-[0_10px_40px_rgba(0,0,0,0.2)] flex items-center justify-center gap-3 text-lg active:scale-95 disabled:opacity-50 border-4 border-white">
-                {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />} บันทึกข้อมูลหน้าแรก
-             </button>
+          {/* --- กิจกรรม 4 การ์ด --- */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 border-b border-slate-100 pb-6">
+                <div>
+                  <h3 className="text-xl font-black flex items-center gap-2 text-green-950"><Compass className="text-orange-500" /> กิจกรรมไฮไลท์ (4 การ์ด)</h3>
+                  <p className="text-sm text-slate-500 mt-1">ส่วนนี้จะแสดงผลอยู่ใต้แถบตัวเลขสถิติบนหน้าแรก</p>
+                </div>
+                <div className="flex flex-col gap-3 min-w-[300px]">
+                   <div><label className="text-[10px] font-bold text-slate-400 uppercase">หัวข้อใหญ่</label><input type="text" value={texts.activityTitle} onChange={e => setTexts({...texts, activityTitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-black text-sm text-green-900" /></div>
+                   <div><label className="text-[10px] font-bold text-slate-400 uppercase">คำบรรยายย่อย</label><input type="text" value={texts.activitySubtitle} onChange={e => setTexts({...texts, activitySubtitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold text-sm text-orange-500" /></div>
+                </div>
+             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {highlightCards.map((card, i) => (
+                <div key={i} className="bg-slate-50 p-5 rounded-3xl border border-slate-200 flex flex-col gap-4">
+                  <div className="relative h-40 bg-slate-200 rounded-2xl overflow-hidden group border border-slate-300">
+                    <img src={card.img || "https://via.placeholder.com/400x300?text=No+Image"} className="w-full h-full object-cover" />
+                    <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
+                      <Upload className="text-white w-8 h-8" />
+                      <input type="file" accept="image/*" className="hidden" onChange={e => handleCardImageUpload(i, e.target.files[0])} />
+                    </label>
+                  </div>
+                  <input type="text" value={card.title} onChange={e => { const n = [...highlightCards]; n[i].title = e.target.value; setHighlightCards(n); }} className="w-full p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm" placeholder="หัวข้อการ์ด" />
+                  <textarea rows={3} value={card.desc} onChange={e => { const n = [...highlightCards]; n[i].desc = e.target.value; setHighlightCards(n); }} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs resize-none" placeholder="คำอธิบาย" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* --- จัดการสิ่งอำนวยความสะดวก --- */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 border-b border-slate-100 pb-6 gap-6">
+              <div>
+                <h3 className="text-xl font-black flex items-center gap-2 text-green-950"><ShieldCheck className="text-orange-500" /> สิ่งอำนวยความสะดวก</h3>
+                <p className="text-sm text-slate-500 font-medium mt-1">คุณครูสามารถเพิ่มการ์ดนำเสนอความพร้อมของค่ายได้ไม่จำกัดที่นี่ครับ</p>
+              </div>
+              <div className="flex flex-col gap-3 min-w-[300px]">
+                   <div><label className="text-[10px] font-bold text-slate-400 uppercase">หัวข้อใหญ่</label><input type="text" value={texts.facilityTitle} onChange={e => setTexts({...texts, facilityTitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-black text-sm text-green-900" /></div>
+                   <div><label className="text-[10px] font-bold text-slate-400 uppercase">คำบรรยายย่อย</label><input type="text" value={texts.facilitySubtitle} onChange={e => setTexts({...texts, facilitySubtitle: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold text-sm text-green-600" /></div>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featureCards.map((card, i) => (
+                <div key={i} className="bg-slate-50 p-6 rounded-3xl border border-slate-200 shadow-sm relative group">
+                  <button type="button" onClick={() => deleteFeatureCard(i)} className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 z-10"><Trash2 className="w-4 h-4" /></button>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 text-orange-500 shrink-0">
+                      {card.icon === 'ShieldCheck' && <ShieldCheck />}{card.icon === 'BedDouble' && <BedDouble />}{card.icon === 'Utensils' && <Utensils />}{card.icon === 'Info' && <Info />}
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase">Icon Type</label>
+                      <select value={card.icon} onChange={e => { const n = [...featureCards]; n[i].icon = e.target.value; setFeatureCards(n); }} className="w-full bg-white border border-slate-200 rounded-lg font-bold text-xs p-1 outline-none">
+                        <option value="ShieldCheck">ความปลอดภัย</option><option value="BedDouble">ที่พัก/นอน</option><option value="Utensils">อาหาร/โรงครัว</option><option value="Info">อื่นๆ/ข้อมูล</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <input type="text" value={card.title} onChange={e => { const n = [...featureCards]; n[i].title = e.target.value; setFeatureCards(n); }} className="w-full p-3 bg-white border border-slate-100 rounded-xl font-black text-sm text-slate-800" placeholder="หัวข้อการ์ด" />
+                    <textarea rows={3} value={card.desc} onChange={e => { const n = [...featureCards]; n[i].desc = e.target.value; setFeatureCards(n); }} className="w-full p-3 bg-white border border-slate-100 rounded-xl text-xs resize-none text-slate-500" placeholder="คำอธิบายสั้นๆ..."></textarea>
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={addFeatureCard} className="bg-green-50 border-2 border-dashed border-green-200 text-green-700 rounded-3xl font-black flex flex-col items-center justify-center gap-2 hover:bg-green-100 hover:border-green-300 transition-all min-h-[200px]"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm"><Plus className="w-6 h-6 text-green-600" /></div>เพิ่มการ์ดใหม่</button>
+            </div>
+          </div>
+
+          {/* 🌟 จัดการคณะผู้บริหาร (Staff Section) 🌟 */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+            <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6 gap-6">
+              <div>
+                <h3 className="text-xl font-black flex items-center gap-2 text-green-950"><Users className="text-orange-500" /> คณะผู้บริหารและทีมงาน</h3>
+                <p className="text-sm text-slate-500 mt-1">จัดการรายชื่อและเลือกว่าจะให้ใครปรากฏอยู่บนการ์ดใน "หน้าแรก" บ้าง</p>
+              </div>
+              <button type="button" onClick={addStaff} className="bg-green-100 text-green-700 px-6 py-3 rounded-2xl font-black flex items-center gap-2 hover:bg-green-200 transition-all">
+                <Plus className="w-5 h-5" /> เพิ่มบุคลากร
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {staffList.map((person, i) => (
+                <div key={i} className={`bg-slate-50 p-5 rounded-3xl border-2 transition-all relative group ${person.showOnHome !== false ? 'border-orange-500 shadow-md' : 'border-white shadow-sm'}`}>
+                  <button type="button" onClick={() => deleteStaff(i)} className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"><Trash2 className="w-4 h-4" /></button>
+                  
+                  <div className="relative w-20 h-20 mx-auto mb-4 group/img">
+                    <div className="w-full h-full bg-green-100 rounded-2xl flex items-center justify-center text-green-700 overflow-hidden border border-green-200">
+                      {person.img ? <img src={person.img} className="w-full h-full object-cover" /> : <UserCheck className="w-10 h-10" />}
+                    </div>
+                    <label className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover/img:opacity-100 cursor-pointer transition-opacity">
+                      <Upload className="text-white w-5 h-5" />
+                      <input type="file" accept="image/*" className="hidden" onChange={e => handleStaffImage(i, e.target.files[0])} />
+                    </label>
+                  </div>
+
+                  <div className="space-y-3">
+                    <input type="text" value={person.name} onChange={e => handleStaffChange(i, 'name', e.target.value)} className="w-full p-2 bg-white border border-slate-100 rounded-lg font-bold text-xs text-center" placeholder="ชื่อ-นามสกุล" />
+                    <input type="text" value={person.pos} onChange={e => handleStaffChange(i, 'pos', e.target.value)} className="w-full p-2 bg-white border border-slate-100 rounded-lg text-[10px] text-center text-slate-500" placeholder="ตำแหน่ง" />
+                  </div>
+
+                  {/* 📌 ระบบติ๊กเลือกแสดงผลหน้าแรก */}
+                  <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-center bg-white rounded-lg p-2">
+                     <label className="flex items-center gap-2 cursor-pointer group/toggle w-full justify-center">
+                       <input 
+                         type="checkbox" 
+                         checked={person.showOnHome !== false} 
+                         onChange={e => handleStaffChange(i, 'showOnHome', e.target.checked)} 
+                         className="w-4 h-4 rounded text-orange-500 focus:ring-orange-500 border-slate-300 cursor-pointer" 
+                       />
+                       <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${person.showOnHome !== false ? 'text-orange-600' : 'text-slate-400'}`}>
+                         โชว์บนหน้าแรก
+                       </span>
+                     </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* แถบสรุปทีมงานด้านล่าง */}
+            <div className="mt-10 p-6 bg-green-900 rounded-[2rem] text-white">
+               <h4 className="font-black text-sm mb-4 border-b border-white/10 pb-2 flex items-center gap-2 uppercase italic"><Info className="w-4 h-4 text-orange-400" /> แถบสรุปทีมงาน (Green Bar)</h4>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-green-300 uppercase">หัวข้อสรุป</label>
+                    <input type="text" value={texts.staffSummaryTitle} onChange={e => setTexts({...texts, staffSummaryTitle: e.target.value})} className="w-full p-3 bg-white/10 border border-white/20 rounded-xl outline-none focus:bg-white/20 mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-green-300 uppercase">คำอธิบาย</label>
+                    <input type="text" value={texts.staffSummaryDesc} onChange={e => setTexts({...texts, staffSummaryDesc: e.target.value})} className="w-full p-3 bg-white/10 border border-white/20 rounded-xl outline-none focus:bg-white/20 mt-1" />
+                  </div>
+               </div>
+            </div>
+          </div>
+
+          <div className="fixed bottom-10 right-10 z-[110]">
+            <button type="submit" disabled={isSaving || isUploading} className="bg-green-950 text-white px-10 py-5 rounded-[2rem] font-black shadow-2xl hover:bg-orange-500 hover:scale-105 transition-all flex items-center gap-3 active:scale-95 disabled:opacity-50 border-4 border-white">
+              {isSaving ? <Loader2 className="animate-spin" /> : <Save className="w-6 h-6" />} บันทึกข้อมูลหน้าแรกทั้งหมด
+            </button>
           </div>
         </form>
       </div>
@@ -557,7 +557,7 @@ export default function AdminPage() {
   };
 
   // ==========================================
-  // 🎯 VIEW: จัดการฐานกิจกรรม (Activities)
+  // 🎯 VIEW: จัดการฐานกิจกรรม (Activities Map)
   // ==========================================
   const ActivitiesView = () => {
     const [bases, setBases] = useState([]);
@@ -705,7 +705,7 @@ export default function AdminPage() {
     };
 
     return (
-      <div className="space-y-10 animate-in fade-in duration-500 relative">
+      <div className="space-y-10 animate-in fade-in duration-500 relative pb-20">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div>
             <h2 className="text-3xl font-black text-slate-800 tracking-tight uppercase italic underline decoration-orange-500 decoration-4 underline-offset-8">จัดการฐานกิจกรรม</h2>
@@ -759,6 +759,7 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Modal สำหรับเพิ่ม/แก้ไขฐานกิจกรรม */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-green-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 flex flex-col md:flex-row gap-8">
@@ -949,7 +950,7 @@ export default function AdminPage() {
     };
 
     return (
-      <div className="space-y-10 animate-in fade-in duration-500 relative">
+      <div className="space-y-10 animate-in fade-in duration-500 relative pb-20">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div>
             <h2 className="text-3xl font-black text-slate-800 tracking-tight uppercase italic underline decoration-orange-500 decoration-4 underline-offset-8">จัดการแกลลอรี่ภาพ</h2>
@@ -1028,56 +1029,33 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex bg-slate-50 font-sans text-slate-900 overflow-hidden">
+    <div className="fixed inset-0 flex bg-slate-50 font-sans text-slate-900 overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-100 h-24 flex items-center justify-between px-10 z-10 sticky top-0">
-          <div className="flex items-center gap-6">
-            <button className="md:hidden p-3 text-slate-500 bg-slate-100 rounded-2xl" onClick={() => setIsMobileMenuOpen(true)}>
-               <Menu className="w-6 h-6" />
-            </button>
-            <div className="hidden sm:block">
-               <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase italic">
-                 {menuItems.find(m => m.id === activeTab)?.label}
-               </h1>
-               <div className="flex items-center gap-2 mt-1">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
-                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Connected to Firebase</p>
-               </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center relative group">
-               <Search className="w-4 h-4 absolute left-4 text-slate-400 group-focus-within:text-orange-500 transition-colors" />
-               <input type="text" placeholder="ค้นหาข้อมูลระบบ..." className="pl-12 pr-6 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 focus:outline-none w-64 transition-all" />
-            </div>
-            <div className="w-12 h-12 rounded-[1.2rem] bg-green-950 flex items-center justify-center text-white font-black shadow-2xl shadow-green-900/40 transform hover:rotate-12 transition-transform cursor-pointer">A</div>
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-y-auto bg-slate-50/50 p-10 custom-scrollbar">
-          <div className="max-w-7xl mx-auto pb-20">
-            {activeTab === 'dashboard' && <DashboardView />}
-            {activeTab === 'homepage' && <HomepageView />}
-            {activeTab === 'gallery' && <GalleryView />}
-            {activeTab === 'activities' && <ActivitiesView />}
-            {activeTab === 'bookings' && (
-               <div className="space-y-8 h-full animate-in fade-in duration-500">
-                  <div className="flex justify-between items-center">
-                    <div>
-                       <h2 className="text-3xl font-black italic underline decoration-orange-500 decoration-4">ปฏิทินการจอง</h2>
-                       <p className="text-slate-500 mt-2">จัดการการจองผ่าน Google Calendar เพื่อให้ซิงค์ข้อมูลกับทีมงานทุกคน</p>
-                    </div>
-                    <a href="https://calendar.google.com" target="_blank" className="bg-[#064e3b] text-white px-8 py-4 rounded-2xl font-black shadow-xl flex items-center gap-2 hover:bg-orange-500 transition-all">
-                      <ExternalLink className="w-5 h-5" /> เปิด Google Calendar
-                    </a>
+      <main className="flex-1 overflow-y-auto p-10 bg-slate-50/50 relative custom-scrollbar">
+        <div className="max-w-6xl mx-auto">
+          {activeTab === 'dashboard' && <DashboardView />}
+          {activeTab === 'homepage' && <HomepageView />}
+          {activeTab === 'gallery' && <GalleryView />}
+          {activeTab === 'activities' && <ActivitiesView />}
+          
+          {activeTab === 'bookings' && (
+             <div className="space-y-8 h-full animate-in fade-in duration-500">
+                <div className="flex justify-between items-center">
+                  <div>
+                     <h2 className="text-3xl font-black italic underline decoration-orange-500 decoration-4">ปฏิทินการจอง</h2>
+                     <p className="text-slate-500 mt-2">จัดการการจองผ่าน Google Calendar เพื่อให้ซิงค์ข้อมูลกับทีมงานทุกคน</p>
                   </div>
-                  <iframe src="https://calendar.google.com/calendar/embed?src=suppamascamp@gmail.com&ctz=Asia%2FBangkok" className="w-full h-[75vh] bg-white rounded-[3rem] shadow-2xl border-8 border-white overflow-hidden" frameBorder="0" scrolling="no"></iframe>
-               </div>
-            )}
-            
-            {/* โชว์กรอบกำลังพัฒนาเฉพาะเมนูที่ยังไม่ได้ทำ */}
-            {['packages', 'settings'].includes(activeTab) && (
+                  <a href="https://calendar.google.com" target="_blank" className="bg-[#064e3b] text-white px-8 py-4 rounded-2xl font-black shadow-xl flex items-center gap-2 hover:bg-orange-500 transition-all">
+                    <ExternalLink className="w-5 h-5" /> เปิด Google Calendar
+                  </a>
+                </div>
+                {/* 📌 เปลี่ยนอีเมล Calendar ตรงนี้ให้เป็นของคุณครู */}
+                <iframe src="https://calendar.google.com/calendar/embed?src=suppamascamp@gmail.com&ctz=Asia%2FBangkok" className="w-full h-[75vh] bg-white rounded-[3rem] shadow-2xl border-8 border-white overflow-hidden" frameBorder="0" scrolling="no"></iframe>
+             </div>
+          )}
+
+          {/* โชว์กรอบสำหรับเมนูที่ยังไม่ได้ทำ (Packages, Settings) */}
+          {['packages', 'settings'].includes(activeTab) && (
               <div className="flex flex-col items-center justify-center min-h-[500px] border-4 border-dashed border-slate-100 rounded-[4rem] bg-white/50 text-slate-300 group hover:border-orange-500/20 transition-all">
                 <div className="p-10 bg-white rounded-[2.5rem] shadow-2xl mb-8 group-hover:scale-110 transition-transform shadow-slate-200/50"><Settings className="w-16 h-16 text-slate-200 animate-spin-slow" /></div>
                 <h3 className="text-3xl font-black text-slate-400 mb-2 uppercase italic tracking-tighter">Feature In Development</h3>
@@ -1086,11 +1064,10 @@ export default function AdminPage() {
                    <Home className="w-5 h-5" /> กลับสู่หน้าแดชบอร์ด
                 </button>
               </div>
-            )}
-          </div>
-        </main>
-      </div>
-
+          )}
+        </div>
+      </main>
+      
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-green-950/40 z-40 md:hidden backdrop-blur-md animate-in fade-in duration-500" onClick={() => setIsMobileMenuOpen(false)} />
       )}
