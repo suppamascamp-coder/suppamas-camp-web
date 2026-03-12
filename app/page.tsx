@@ -29,7 +29,7 @@ export default function Home() {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const heroSlides = [
-    "/1.jpg", 
+    "/1.JPG", 
     "/2.jpg",
     "/3.jpg",
     "/4.JPG"
