@@ -7,18 +7,72 @@ import {
   Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit
 } from 'lucide-react';
 
-// 📌 แก้ไข Path ให้ถูกต้องตามโครงสร้างโฟลเดอร์ของคุณครู
 import { db, storage, auth } from '../../src/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+
+// ============================================================================
+// 🗜️ ฟังก์ชันบีบอัดรูปภาพอัจฉริยะ (Image Compression Utility)
+// ============================================================================
+/**
+ * @param {File} file - ไฟล์รูปภาพต้นฉบับ
+ * @param {number} maxWidth - ความกว้างสูงสุดที่ต้องการ (Pixels)
+ * @param {number} quality - คุณภาพรูปภาพ (0.0 - 1.0)
+ * @returns {Promise<File>} - คืนค่ากลับมาเป็นไฟล์ที่บีบอัดแล้ว
+ */
+const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // คำนวณสัดส่วนใหม่ถ้าภาพกว้างเกินไป
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // แปลงกลับเป็น File (JPEG) คุณภาพตามที่กำหนด
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Canvas is empty'));
+            return;
+          }
+          // เปลี่ยนนามสกุลไฟล์เป็น .jpg เสมอเพื่อขนาดที่เล็กที่สุด
+          const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+          const compressedFile = new File([blob], newFileName, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+// ============================================================================
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
 
-  const [activeTab, setActiveTab] = useState('activities'); // ตั้งให้เปิดมาเจอหน้ากิจกรรมเลยเพื่อทดสอบ
+  const [activeTab, setActiveTab] = useState('activities'); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
@@ -44,6 +98,9 @@ export default function AdminPage() {
     }
   };
 
+  // ==========================================
+  // VIEW: หน้าจอ Login
+  // ==========================================
   if (!isAuthenticated) {
     return (
       <div className="fixed inset-0 z-[100] bg-slate-50 flex items-center justify-center p-4 overflow-hidden">
@@ -146,18 +203,16 @@ export default function AdminPage() {
   );
 
   // ==========================================
-  // 🎯 VIEW: จัดการฐานกิจกรรม (Activities & Interactive Map)
+  // 🎯 VIEW: จัดการฐานกิจกรรม (Activities)
   // ==========================================
   const ActivitiesView = () => {
     const [bases, setBases] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     
-    // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [editingId, setEditingId] = useState(null);
     
-    // ฟอร์มข้อมูลฐาน
     const [formData, setFormData] = useState({
       id_number: '',
       name: '',
@@ -172,7 +227,6 @@ export default function AdminPage() {
     const [previewUrl, setPreviewUrl] = useState(null);
     const fileInputRef = useRef(null);
 
-    // ดึงข้อมูลฐานกิจกรรมจาก Firestore
     useEffect(() => {
       const fetchBases = async () => {
         try {
@@ -192,18 +246,27 @@ export default function AdminPage() {
       fetchBases();
     }, []);
 
-    const handleFileSelect = (e) => {
+    // ระบบบีบอัดภาพก่อนนำไปใช้งานในฟอร์มกิจกรรม
+    const handleFileSelect = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      if (file.size > 5 * 1024 * 1024) {
-        alert("ขนาดไฟล์เกิน 5MB");
-        return;
+
+      try {
+        const compressedFile = await compressImage(file, 1200, 0.8);
+        
+        if (compressedFile.size > 5 * 1024 * 1024) {
+          alert("ขนาดไฟล์ยังคงเกิน 5MB แม้จะถูกบีบอัดแล้ว กรุณาเลือกรูปอื่น");
+          return;
+        }
+
+        setPendingFile(compressedFile);
+        setPreviewUrl(URL.createObjectURL(compressedFile));
+      } catch (error) {
+        console.error("Compression error:", error);
+        alert("เกิดข้อผิดพลาดในการประมวลผลรูปภาพ");
       }
-      setPendingFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
     };
 
-    // 🎯 ฟังก์ชันอัจฉริยะ: กดบนภาพแผนที่แล้วอัปเดตแกน X/Y อัตโนมัติ
     const handleMapClick = (e) => {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -255,12 +318,22 @@ export default function AdminPage() {
       let finalImageUrl = formData.img;
       let finalStoragePath = formData.storagePath;
 
-      // ถ้ามีการเลือกรูปใหม่ ให้อัปโหลดก่อน
       if (pendingFile) {
         const storageRef = ref(storage, `bases/${Date.now()}_${pendingFile.name}`);
-        const uploadTask = await uploadBytesResumable(storageRef, pendingFile);
-        finalImageUrl = await getDownloadURL(uploadTask.ref);
-        finalStoragePath = uploadTask.ref.fullPath;
+        const uploadTask = uploadBytesResumable(storageRef, pendingFile);
+        
+        try {
+          await new Promise((resolve, reject) => {
+            uploadTask.on('state_changed', null, reject, resolve);
+          });
+          finalImageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          finalStoragePath = uploadTask.snapshot.ref.fullPath;
+        } catch (error) {
+          console.error("Upload error:", error);
+          alert("อัปโหลดไม่สำเร็จ");
+          setIsUploading(false);
+          return;
+        }
       }
 
       const baseDataToSave = {
@@ -276,11 +349,9 @@ export default function AdminPage() {
 
       try {
         if (editingId) {
-          // แก้ไขของเดิม
           await updateDoc(doc(db, "adventure_bases", editingId), baseDataToSave);
-          setBases(bases.map(b => b.id === editingId ? { ...b, ...baseDataToSave } : b));
+          setBases(bases.map(b => b.id === editingId ? { ...b, ...baseDataToSave } : b).sort((a,b) => a.id_number - b.id_number));
         } else {
-          // เพิ่มของใหม่
           baseDataToSave.createdAt = serverTimestamp();
           const docRef = await addDoc(collection(db, "adventure_bases"), baseDataToSave);
           setBases([...bases, { id: docRef.id, ...baseDataToSave }].sort((a,b) => a.id_number - b.id_number));
@@ -309,7 +380,6 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* แผนที่พรีวิวรวมด้านบน (ดูว่ามีหมุดตรงไหนบ้าง) */}
         <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col md:flex-row gap-8">
            <div className="w-full md:w-1/2 h-64 bg-slate-200 rounded-[1.5rem] relative overflow-hidden bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800')] bg-cover bg-center border-4 border-slate-100">
               <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]"></div>
@@ -332,16 +402,17 @@ export default function AdminPage() {
            </div>
         </div>
 
-        {/* ตารางรายการฐาน */}
         {isLoading ? (
           <div className="flex justify-center h-32 items-center"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>
+        ) : bases.length === 0 ? (
+          <div className="text-center py-20 text-slate-400 font-bold bg-white rounded-[3rem] border-4 border-dashed border-slate-100">ยังไม่มีข้อมูลฐานกิจกรรม เริ่มเพิ่มฐานแรกได้เลย!</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {bases.map((base) => (
               <div key={base.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group flex gap-4 items-center">
                 <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200 relative">
                   {base.img ? <img src={base.img} alt={base.name} className="w-full h-full object-cover" /> : <Map className="w-8 h-8 text-slate-300 absolute top-6 left-6" />}
-                  <div className="absolute top-1 left-1 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-[10px] border border-white">{base.id_number}</div>
+                  <div className="absolute top-1 left-1 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-[10px] border border-white shadow-md">{base.id_number}</div>
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <h4 className="font-black text-slate-800 truncate" title={base.name}>{base.name}</h4>
@@ -356,12 +427,10 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* 🌟 Modal เพิ่ม/แก้ไขฐาน และ จิ้มแผนที่ 🌟 */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-green-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 flex flex-col md:flex-row gap-8">
               
-              {/* ซ้าย: ฟอร์มกรอกข้อมูล */}
               <div className="w-full md:w-1/2 space-y-5">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-2xl font-black text-slate-800">{editingId ? 'แก้ไขข้อมูลฐาน' : 'เพิ่มฐานกิจกรรมใหม่'}</h3>
@@ -384,7 +453,7 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">รูปภาพประจำฐาน</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">รูปภาพประจำฐาน (บีบอัดอัตโนมัติ)</label>
                   <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
                   <div className="flex gap-4 items-center">
                     <button type="button" onClick={() => fileInputRef.current.click()} className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center gap-2">
@@ -402,21 +471,18 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* ขวา: ระบบคลิกปักหมุดบนแผนที่อัจฉริยะ */}
               <div className="w-full md:w-1/2 flex flex-col">
                 <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 mb-4">
                   <h4 className="font-black text-orange-800 text-sm flex items-center gap-2 mb-1"><Map className="w-4 h-4" /> ระบบปักหมุดอัจฉริยะ</h4>
                   <p className="text-xs text-orange-600 font-medium">คลิกตำแหน่งบนรูปแผนที่ด้านล่าง เพื่อย้ายหมุดหมายเลขฐานโดยอัตโนมัติ</p>
                 </div>
                 
-                {/* พื้นที่แผนที่สำหรับคลิก */}
                 <div 
                   className="w-full h-[300px] md:h-full bg-slate-200 rounded-[2rem] relative overflow-hidden cursor-crosshair border-4 border-slate-100 shadow-inner group bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800')] bg-cover bg-center"
                   onClick={handleMapClick}
                 >
                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] group-hover:bg-white/40 transition-colors"></div>
                    
-                   {/* หมุดที่ขยับตามการคลิก */}
                    <div 
                      className="absolute w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center font-black text-xl shadow-2xl transform -translate-x-1/2 -translate-y-1/2 border-4 border-white transition-all duration-300 ease-out z-10"
                      style={{ top: formData.top, left: formData.left }}
@@ -425,7 +491,6 @@ export default function AdminPage() {
                    </div>
                 </div>
                 
-                {/* แสดงตัวเลขพิกัดให้เห็น */}
                 <div className="flex gap-4 mt-4">
                   <div className="flex-1 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 flex justify-between items-center"><span className="text-[10px] font-bold text-slate-400 uppercase">แกน Y (Top)</span> <span className="font-black text-slate-700">{formData.top}</span></div>
                   <div className="flex-1 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 flex justify-between items-center"><span className="text-[10px] font-bold text-slate-400 uppercase">แกน X (Left)</span> <span className="font-black text-slate-700">{formData.left}</span></div>
@@ -439,7 +504,9 @@ export default function AdminPage() {
     );
   };
 
-
+  // ==========================================
+  // 🎯 VIEW: แกลลอรี่หลัก (Gallery)
+  // ==========================================
   const GalleryView = () => {
     const [images, setImages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -447,7 +514,6 @@ export default function AdminPage() {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [filter, setFilter] = useState('ทั้งหมด');
     
-    // State สำหรับ Popup ระบุชื่อรูปภาพ
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [pendingFile, setPendingFile] = useState(null);
     const [imageName, setImageName] = useState('');
@@ -475,22 +541,30 @@ export default function AdminPage() {
       fetchImages();
     }, []);
 
-    const handleFileSelect = (e) => {
+    // ระบบบีบอัดภาพก่อนเปิด Modal ให้ตั้งชื่อในแกลลอรี่
+    const handleFileSelect = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
-      if (file.size > 5 * 1024 * 1024) {
-        alert("ขนาดไฟล์ใหญ่เกินไป กรุณาอัปโหลดรูปที่ไม่เกิน 5MB");
-        return;
-      }
+      try {
+        const compressedFile = await compressImage(file, 1200, 0.8);
 
-      setPendingFile(file);
-      setPreviewUrl(URL.createObjectURL(file)); 
-      setImageName(''); 
-      setImageCategory(filter === 'ทั้งหมด' ? 'กิจกรรม' : filter); 
-      setShowUploadModal(true); 
-      
-      if (fileInputRef.current) fileInputRef.current.value = '';
+        if (compressedFile.size > 5 * 1024 * 1024) {
+          alert("ขนาดไฟล์ใหญ่เกินไป กรุณาอัปโหลดรูปที่ไม่เกิน 5MB");
+          return;
+        }
+
+        setPendingFile(compressedFile);
+        setPreviewUrl(URL.createObjectURL(compressedFile)); 
+        setImageName(''); 
+        setImageCategory(filter === 'ทั้งหมด' ? 'กิจกรรม' : filter); 
+        setShowUploadModal(true); 
+        
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      } catch (error) {
+        console.error("Compression error:", error);
+        alert("เกิดข้อผิดพลาดในการประมวลผลรูปภาพ");
+      }
     };
 
     const confirmUpload = async () => {
@@ -560,12 +634,24 @@ export default function AdminPage() {
 
     const filteredImages = filter === 'ทั้งหมด' ? images : images.filter(img => img.category === filter);
 
+    // 🌟 ตัวช่วยสำหรับแปลงวันที่ให้ปลอดภัย (ไม่พังถ้ายังโหลดไม่เสร็จ)
+    const renderDate = (createdAt) => {
+      if (!createdAt) return "เพิ่งอัปโหลด";
+      if (typeof createdAt.toDate === 'function') {
+        return createdAt.toDate().toLocaleDateString('th-TH');
+      }
+      if (createdAt instanceof Date) {
+        return createdAt.toLocaleDateString('th-TH');
+      }
+      return "เพิ่งอัปโหลด";
+    };
+
     return (
       <div className="space-y-10 animate-in fade-in duration-500 relative">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div>
             <h2 className="text-3xl font-black text-slate-800 tracking-tight uppercase italic underline decoration-orange-500 decoration-4 underline-offset-8">จัดการแกลลอรี่ภาพ</h2>
-            <p className="text-slate-400 text-sm mt-3 font-medium">อัปโหลดและจัดระเบียบรูปลงฐานข้อมูล Firebase</p>
+            <p className="text-slate-400 text-sm mt-3 font-medium">อัปโหลดรูปภาพใหม่ ระบบจะทำการบีบอัดขนาดไฟล์ให้อัตโนมัติ</p>
           </div>
           
           <input 
@@ -585,7 +671,6 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* ตัวกรองหมวดหมู่ */}
         <div className="flex flex-wrap gap-4 border-b border-slate-100 pb-6">
            {['ทั้งหมด', 'กิจกรรม', 'สถานที่', 'ห้องพัก', 'อาหาร', 'บุคลากร'].map((cat, i) => (
              <button 
@@ -597,7 +682,6 @@ export default function AdminPage() {
            ))}
         </div>
 
-        {/* ตารางแสดงรูปภาพ */}
         {isLoading ? (
           <div className="flex justify-center items-center h-64"><Loader2 className="w-10 h-10 animate-spin text-orange-500" /></div>
         ) : filteredImages.length === 0 ? (
@@ -608,7 +692,6 @@ export default function AdminPage() {
                <div key={img.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all group">
                   <div className="relative h-56 overflow-hidden bg-slate-100">
                      <img src={img.src} alt={img.name} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" />
-                     {/* ป้าย Category มุมซ้ายบน */}
                      <div className="absolute top-4 left-4 px-4 py-1.5 bg-green-950/90 backdrop-blur-md rounded-xl text-[10px] font-black uppercase text-white tracking-widest shadow-lg">
                         {img.category}
                      </div>
@@ -622,10 +705,9 @@ export default function AdminPage() {
                      </div>
                   </div>
                   <div className="p-6">
-                     {/* แสดงชื่อภาพที่ตั้งเอง */}
                      <h4 className="font-black text-slate-800 truncate mb-1 text-lg" title={img.name}>{img.name}</h4>
                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter italic">
-                        {img.createdAt?.toDate ? img.createdAt.toDate().toLocaleDateString('th-TH') : "เพิ่งอัปโหลด"}
+                        {renderDate(img.createdAt)}
                      </p>
                   </div>
                </div>
@@ -633,7 +715,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* 🌟 POPUP MODAL สำหรับตั้งชื่อรูปภาพ 🌟 */}
         {showUploadModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
@@ -644,7 +725,6 @@ export default function AdminPage() {
                 </button>
               </div>
               
-              {/* พรีวิวรูปภาพ */}
               <div className="w-full h-48 bg-slate-100 rounded-[1.5rem] mb-6 overflow-hidden border border-slate-200">
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
               </div>

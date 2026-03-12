@@ -1,26 +1,25 @@
 import React, { useState, useEffect } from 'react';
-// 📌 แก้ไขแล้ว: เพิ่ม Image as ImageIcon เข้ามาตรงนี้ครับ
-import { X, Loader2, Map as MapIcon, Image as ImageIcon } from 'lucide-react'; 
+import { X, Loader2, Map as MapIcon, Image as ImageIcon, Navigation } from 'lucide-react';
 
 // 📌 นำเข้า Firebase
 import { db } from '../lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
 export default function AdventureMapModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [activeBase, setActiveBase] = useState<string | null>(null);
-  
-  // State สำหรับเก็บข้อมูลฐานที่ดึงมาจาก Firebase
+  // State สำหรับเก็บข้อมูล
   const [adventureBases, setAdventureBases] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // State สำหรับ Popup เมื่อกดหมุดบนแผนที่
+  const [activePopupData, setActivePopupData] = useState<any | null>(null);
 
-  // 📸 ฟังก์ชันดึงข้อมูลจาก Firebase (จะทำงานเมื่อ Modal ถูกเปิดขึ้นมา)
+  // 📸 ฟังก์ชันดึงข้อมูลจาก Firebase
   useEffect(() => {
-    if (!isOpen) return; // ถ้าไม่ได้เปิดแผนที่อยู่ ไม่ต้องดึงข้อมูลให้เปลืองโควต้า
+    if (!isOpen) return;
 
     const fetchBases = async () => {
       setIsLoading(true);
       try {
-        // ดึงข้อมูลจากคอลเล็กชัน adventure_bases โดยเรียงตาม id_number จากน้อยไปมาก
         const q = query(collection(db, "adventure_bases"), orderBy("id_number", "asc"));
         const querySnapshot = await getDocs(q);
         
@@ -30,11 +29,6 @@ export default function AdventureMapModal({ isOpen, onClose }: { isOpen: boolean
         });
         
         setAdventureBases(fetchedBases);
-        
-        // ตั้งค่าให้ฐานแรกลำดับที่ 1 ถูกเลือกแสดงผลเป็นค่าเริ่มต้น (ถ้ามีข้อมูล)
-        if (fetchedBases.length > 0) {
-          setActiveBase(fetchedBases[0].id);
-        }
       } catch (error) {
         console.error("Error fetching bases:", error);
       } finally {
@@ -48,88 +42,168 @@ export default function AdventureMapModal({ isOpen, onClose }: { isOpen: boolean
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-green-950/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="bg-slate-50 w-full max-w-6xl h-[90vh] md:h-[80vh] rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-500 border border-white/20">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-green-950/90 backdrop-blur-sm p-2 md:p-4 animate-in fade-in duration-300">
+      
+      {/* 🌟 คอนเทนเนอร์หลัก (เลื่อน Scroll ได้) 🌟 */}
+      <div className="bg-slate-50 w-full max-w-5xl h-[95vh] rounded-[2rem] shadow-2xl relative flex flex-col overflow-hidden animate-in zoom-in-95 duration-500 border border-white/10">
         
-        {/* ปุ่มปิด */}
-        <button 
-          onClick={onClose} 
-          className="absolute top-6 right-6 z-20 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-3 rounded-full transition-all shadow-lg"
-        >
-          <X className="w-6 h-6" />
-        </button>
-
-        {/* ส่วนซ้าย: แผนที่แบบ Interactive */}
-        <div className="w-full md:w-2/3 h-1/2 md:h-full bg-slate-200 relative p-8 md:p-12 flex flex-col items-center justify-center">
-          <h2 className="text-2xl md:text-3xl font-black text-green-950 mb-6 w-full text-left uppercase italic tracking-tighter">Adventure Map</h2>
-          
-          <div className="w-full h-full relative bg-white rounded-[2rem] shadow-inner border-4 border-slate-100 overflow-hidden bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800')] bg-cover bg-center">
-            <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px]"></div> 
-            
-            {/* แสดงสถานะกำลังโหลด */}
-            {isLoading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-50">
-                <Loader2 className="w-10 h-10 animate-spin text-orange-500 mb-4" />
-                <p className="text-green-900 font-bold">กำลังโหลดข้อมูลแผนที่...</p>
-              </div>
-            )}
-            
-            {/* 📌 หมุดบนแผนที่ (วนลูปจากข้อมูล Firebase) */}
-            {!isLoading && adventureBases.map((base) => (
-              <button 
-                key={base.id}
-                onClick={() => setActiveBase(base.id)}
-                className={`absolute w-10 h-10 md:w-12 md:h-12 rounded-full font-black text-lg transition-all transform -translate-x-1/2 -translate-y-1/2 shadow-xl border-4 ${
-                  activeBase === base.id 
-                    ? 'bg-orange-500 text-white border-white scale-125 z-10 animate-bounce' 
-                    : 'bg-white text-green-900 border-green-900 hover:bg-green-100 hover:scale-110 z-0'
-                }`}
-                style={{ top: base.top, left: base.left }}
-              >
-                {base.id_number}
-              </button>
-            ))}
-
-            {/* แจ้งเตือนกรณีไม่มีข้อมูล */}
-            {!isLoading && adventureBases.length === 0 && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                 <MapIcon className="w-16 h-16 mb-4 opacity-50" />
-                 <p className="font-bold">ยังไม่มีข้อมูลฐานกิจกรรม</p>
-              </div>
-            )}
+        {/* Header คงที่ด้านบน */}
+        <div className="bg-white px-6 py-4 flex justify-between items-center border-b border-slate-200 z-10 shrink-0 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center">
+              <MapIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-green-950 leading-none">ฐานกิจกรรมผจญภัย</h2>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Adventure Map & Details</p>
+            </div>
           </div>
-          <p className="text-slate-400 text-sm mt-4 italic">*คลิกที่หมายเลขหมุดเพื่อดูรูปและข้อมูลฐาน</p>
+          <button 
+            onClick={onClose} 
+            className="bg-slate-100 text-slate-500 hover:text-rose-500 hover:bg-rose-50 p-2.5 rounded-full transition-all"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* ส่วนขวา: ข้อมูลฐานที่ถูกเลือก */}
-        <div className="w-full md:w-1/3 h-1/2 md:h-full bg-white p-8 md:p-12 flex flex-col relative">
-          {!isLoading && adventureBases.map((base) => (
-            <div 
-              key={base.id} 
-              className={`flex flex-col h-full absolute inset-0 p-8 md:p-12 transition-opacity duration-500 bg-white ${activeBase === base.id ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
-            >
-              <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-[1.5rem] flex items-center justify-center font-black text-3xl mb-6 shadow-inner border border-orange-200 shrink-0">
-                {base.id_number}
-              </div>
-              <h3 className="text-3xl font-black text-slate-800 mb-4 leading-tight">{base.name}</h3>
-              <p className="text-slate-500 leading-relaxed font-medium mb-8 overflow-y-auto custom-scrollbar pr-2">
-                {base.desc}
-              </p>
-              
-              <div className="mt-auto relative rounded-[2rem] overflow-hidden shadow-2xl group shrink-0 h-48 md:h-1/2">
-                {base.img ? (
-                  <img src={base.img} alt={base.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                ) : (
-                  <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
-                    <ImageIcon className="w-12 h-12" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-              </div>
+        {/* พื้นที่เนื้อหาที่สามารถเลื่อนได้ (Scrollable Area) */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 bg-slate-50">
+          
+          {/* สถานะกำลังโหลด */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-10 h-10 animate-spin text-orange-500 mb-4" />
+              <p className="text-slate-500 font-bold">กำลังโหลดข้อมูลฐานกิจกรรม...</p>
             </div>
-          ))}
+          )}
+
+          {!isLoading && adventureBases.length === 0 && (
+             <div className="text-center py-20 text-slate-400 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
+                <MapIcon className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p className="font-bold">ยังไม่มีข้อมูลฐานกิจกรรมในระบบ</p>
+             </div>
+          )}
+
+          {!isLoading && adventureBases.length > 0 && (
+            <div className="space-y-12">
+              
+              {/* 🗺️ ส่วนที่ 1: แผนที่ Interactive */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                   <h3 className="text-lg font-black text-slate-800 flex items-center gap-2"><Navigation className="w-5 h-5 text-orange-500" /> แผนที่จำลอง</h3>
+                   <span className="text-xs font-bold text-slate-400 bg-slate-200 px-3 py-1 rounded-full">จิ้มที่หมุดเพื่อดูข้อมูล</span>
+                </div>
+                
+                <div className="w-full h-[250px] md:h-[400px] bg-slate-200 rounded-[2rem] relative overflow-hidden bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800')] bg-cover bg-center border-4 border-white shadow-lg">
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px]"></div> 
+                  
+                  {/* 📌 หมุดบนแผนที่ */}
+                  {adventureBases.map((base) => (
+                    <button 
+                      key={`pin-${base.id}`}
+                      onClick={() => setActivePopupData(base)} // กดแล้วเซ็ตข้อมูลเปิด Popup
+                      className="absolute w-10 h-10 md:w-12 md:h-12 bg-orange-500 text-white rounded-full font-black text-lg md:text-xl transition-all transform -translate-x-1/2 -translate-y-1/2 shadow-[0_10px_20px_rgba(249,115,22,0.4)] border-[3px] border-white hover:scale-125 hover:bg-green-700 hover:z-20 active:scale-95 flex items-center justify-center z-10"
+                      style={{ top: base.top, left: base.left }}
+                    >
+                      {base.id_number}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 📋 ส่วนที่ 2: รายการฐานทั้งหมด (แสดงแบบการ์ดเรียงลงมา) */}
+              <div className="space-y-6">
+                <div className="px-2 border-b border-slate-200 pb-4 mb-6">
+                  <h3 className="text-2xl font-black text-slate-800">รายละเอียดฐานทั้งหมด</h3>
+                  <p className="text-sm text-slate-500 font-medium mt-1">เลื่อนดูภาพและข้อมูลของทุกฐานได้ที่นี่</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {adventureBases.map((base) => (
+                    <div key={`card-${base.id}`} className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl transition-all group flex flex-col">
+                      {/* รูปภาพของฐาน */}
+                      <div className="relative h-48 md:h-56 bg-slate-100 overflow-hidden shrink-0">
+                        {base.img ? (
+                          <img src={base.img} alt={base.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-300">
+                            <ImageIcon className="w-12 h-12" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        {/* ป้ายหมายเลขฐานมุมซ้ายล่าง */}
+                        <div className="absolute bottom-4 left-4 w-12 h-12 bg-white text-green-950 rounded-xl flex items-center justify-center font-black text-2xl shadow-lg border-2 border-white/50">
+                          {base.id_number}
+                        </div>
+                      </div>
+                      
+                      {/* ข้อมูลของฐาน */}
+                      <div className="p-6 flex-1 flex flex-col">
+                        <h4 className="text-xl font-black text-slate-800 mb-3 leading-tight">{base.name}</h4>
+                        <p className="text-slate-500 text-sm leading-relaxed font-medium mb-4 flex-1">
+                          {base.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          )}
         </div>
       </div>
+
+      {/* ========================================================= */}
+      {/* 🌟 POPUP MODAL (เด้งขึ้นมาเมื่อกดหมุดบนแผนที่) 🌟 */}
+      {/* ========================================================= */}
+      {activePopupData && (
+        <div 
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setActivePopupData(null)} // กดพื้นที่ว่างเพื่อปิด
+        >
+          <div 
+            className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[85vh]"
+            onClick={(e) => e.stopPropagation()} // ป้องกันการกดทะลุ
+          >
+            {/* รูปภาพฐานใน Popup */}
+            <div className="relative h-56 bg-slate-100 shrink-0">
+              {activePopupData.img ? (
+                <img src={activePopupData.img} alt={activePopupData.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-300">
+                  <ImageIcon className="w-16 h-16" />
+                </div>
+              )}
+              <div className="absolute top-4 right-4">
+                <button onClick={() => setActivePopupData(null)} className="bg-black/50 hover:bg-black text-white p-2 rounded-full backdrop-blur-md transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="absolute -bottom-6 left-6 w-16 h-16 bg-orange-500 text-white rounded-[1.2rem] flex items-center justify-center font-black text-3xl shadow-lg border-4 border-white">
+                {activePopupData.id_number}
+              </div>
+            </div>
+
+            {/* ข้อมูลฐานใน Popup */}
+            <div className="p-8 pt-10 overflow-y-auto custom-scrollbar flex-1">
+              <h3 className="text-2xl font-black text-slate-800 mb-4 leading-tight">{activePopupData.name}</h3>
+              <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100">
+                <p className="text-slate-600 leading-relaxed font-medium">
+                  {activePopupData.desc}
+                </p>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-slate-50 border-t border-slate-100 shrink-0">
+               <button onClick={() => setActivePopupData(null)} className="w-full py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors">
+                 ปิดหน้าต่าง
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
