@@ -576,11 +576,11 @@ export default function Home() {
                 {/* 🗺️ Thumbnail แผนที่ภาพวาด (ลอยทับอยู่มุมขวาล่าง) */}
                 <div 
                   className="absolute bottom-8 right-8 w-40 h-40 md:w-48 md:h-48 bg-white p-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-10 cursor-zoom-in group/map transform hover:scale-105 transition-all duration-300 border-4 border-white"
-                  onClick={() => setSelectedImage('/map.jpg')} 
+                  onClick={() => setSelectedImage('/map.png')} 
                   title="คลิกเพื่อขยายแผนที่ภาพวาด"
                 >
                   <div className="w-full h-full rounded-[1.5rem] overflow-hidden relative">
-                    <img src="/map.jpg" alt="แผนที่ภาพวาดค่ายลูกเสือ" className="w-full h-full object-cover group-hover/map:scale-110 transition-transform duration-500" />
+                    <img src="/map.png" alt="แผนที่ภาพวาดค่ายลูกเสือ" className="w-full h-full object-cover group-hover/map:scale-110 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center opacity-0 group-hover/map:opacity-100 transition-opacity">
                       <ZoomIn className="w-8 h-8 text-white drop-shadow-md mb-1" />
                       <span className="text-white text-[10px] font-black uppercase tracking-widest drop-shadow-md">คลิกเพื่อซูม</span>
