@@ -7,7 +7,6 @@ import {
   Phone, Facebook, MessageCircle, Clock, UserCheck, Award,
   X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles
 } from 'lucide-react';
-import ActivityCard from '../src/components/ActivityCard'; 
 import GoogleReviews from '../src/components/GoogleReviews'; 
 import AdventureMapModal from '../src/components/AdventureMapModal'; 
 
@@ -273,7 +272,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. 🌟 Activities Section (ปรับเป็น 4 การ์ด ตามข้อมูลล่าสุด) 🌟 */}
+      {/* 5. 🌟 Activities Section (ปรับเป็น 4 การ์ด แสดงข้อความครบถ้วน) 🌟 */}
       <section id="activities" className="py-24 scroll-mt-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 text-center md:text-left">
@@ -286,45 +285,43 @@ export default function Home() {
              }} className="text-green-800 font-bold border-b-2 border-green-800 pb-1 hover:text-orange-500 hover:border-orange-500 transition-all flex items-center gap-2 mx-auto md:mx-0">ดูรูปกิจกรรมทั้งหมดในแกลลอรี่ <ArrowRight className="w-4 h-4" /></button>
           </div>
           
-          {/* ปรับ Layout ให้เป็น grid 4 คอลัมน์ สำหรับจอใหญ่ */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* การ์ดใบที่ 1 (ใบนี้มีปุ่มกดเปิดแผนที่) */}
-            <div className="group rounded-[2.5rem] overflow-hidden bg-white shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 relative flex flex-col">
-              <div className="relative h-64 overflow-hidden shrink-0">
-                <img src={displayCards[0].img} alt={displayCards[0].title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-green-950/90 via-black/20 to-transparent"></div>
-                <Compass className="absolute bottom-6 left-6 w-10 h-10 text-orange-400 drop-shadow-md" />
-              </div>
-              <div className="p-8 flex flex-col flex-1">
-                <h3 className="text-2xl font-black text-slate-800 mb-3 group-hover:text-green-800 transition-colors">{displayCards[0].title}</h3>
-                <p className="text-slate-500 mb-8 leading-relaxed font-medium flex-1">{displayCards[0].desc}</p>
-                <button onClick={() => setIsMapModalOpen(true)} className="w-full py-4 rounded-2xl font-black bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center gap-2 shrink-0">
-                  <Map className="w-5 h-5" /> ดูแผนที่ฐาน
-                </button>
-              </div>
-            </div>
+            {displayCards.map((card: any, index: number) => {
+              // ชุดไอคอนสำหรับวนลูปแสดงบนการ์ดแต่ละใบ
+              const icons = [Compass, Flame, Users, Sparkles];
+              const Icon = icons[index % icons.length];
+              const isFirstCard = index === 0;
 
-            {/* การ์ดใบที่ 2 */}
-            <ActivityCard 
-              title={displayCards[1].title} 
-              description={displayCards[1].desc} 
-              image={displayCards[1].img} 
-              Icon={Flame} 
-            />
-            {/* การ์ดใบที่ 3 */}
-            <ActivityCard 
-              title={displayCards[2].title} 
-              description={displayCards[2].desc} 
-              image={displayCards[2].img} 
-              Icon={Users} 
-            />
-            {/* การ์ดใบที่ 4 */}
-            <ActivityCard 
-              title={displayCards[3].title} 
-              description={displayCards[3].desc} 
-              image={displayCards[3].img} 
-              Icon={Sparkles} 
-            />
+              return (
+                <div key={index} className="group rounded-[2.5rem] overflow-hidden bg-white shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 relative flex flex-col">
+                  {/* รูปภาพพร้อมไอคอนตกแต่ง */}
+                  <div className="relative h-64 overflow-hidden shrink-0">
+                    <img src={card.img} alt={card.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${isFirstCard ? 'from-green-950/90' : 'from-black/80'} via-black/20 to-transparent`}></div>
+                    <div className="absolute bottom-4 left-4 w-12 h-12 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
+                      <Icon className="w-6 h-6 text-orange-400 drop-shadow-md" />
+                    </div>
+                  </div>
+                  
+                  {/* ข้อความแสดงแบบเต็มๆ ไม่มีตัดคำ ไม่มีคำว่า 'ดูรายละเอียด' */}
+                  <div className="p-8 flex flex-col flex-1">
+                    <h3 className={`text-2xl font-black mb-3 transition-colors ${isFirstCard ? 'text-green-800' : 'text-slate-800 group-hover:text-green-800'}`}>
+                      {card.title}
+                    </h3>
+                    <p className="text-slate-500 leading-relaxed font-medium flex-1">
+                      {card.desc}
+                    </p>
+                    
+                    {/* คงปุ่มแผนที่ไว้เฉพาะการ์ดใบแรกเท่านั้น */}
+                    {isFirstCard && (
+                      <button onClick={() => setIsMapModalOpen(true)} className="mt-8 w-full py-4 rounded-2xl font-black bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center gap-2 shrink-0">
+                        <Map className="w-5 h-5" /> ดูแผนที่ฐาน
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
