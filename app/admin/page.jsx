@@ -799,6 +799,25 @@ try {
                          <button type="button" onClick={() => contentFileInputRef.current.click()} disabled={isContentImageUploading} className="p-2 hover:bg-white rounded shadow-sm text-orange-600 font-bold text-xs flex items-center gap-1" title="แทรกรูปภาพลงในเนื้อหาข่าว">
                            {isContentImageUploading ? <Loader2 className="animate-spin w-4 h-4" /> : <ImageIcon className="w-4 h-4" />} แทรกรูปภาพ
                          </button>
+                         {/* 🌟 ปุ่มแทรก Embed (อัปเกรดแก้ปัญหาความสูงและ Warning) 🌟 */}
+<button 
+  type="button" 
+  onClick={() => { 
+    let code = prompt("วางโค้ด Embed (iframe) ที่นี่:"); 
+    if(code) {
+      // 1. คลีนโค้ดเพื่อแก้ Warning สีเหลืองในหน้าเว็บ
+      code = code.replace(/allowfullscreen="allowfullscreen"/g, 'allowFullScreen');
+      
+      // 2. ห่อหุ้มด้วย div ที่บังคับสัดส่วน 16:9 (Responsive Iframe) ทำให้ Canva แสดงผลพอดี 100%
+      const wrapper = `\n<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;" class="my-8 rounded-[2rem] shadow-2xl border border-slate-100 w-full">${code}</div>\n`;
+      
+      insertHTMLTag(wrapper, ''); 
+    }
+  }} 
+  className="p-2 px-3 bg-purple-50 text-purple-600 rounded-lg text-xs font-black flex items-center gap-1 shadow-sm"
+>
+  แทรกโค้ด Embed
+</button>
                       </div>
 
                       {/* จัดบรรทัด */}

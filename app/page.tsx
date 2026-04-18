@@ -6,7 +6,7 @@ import {
   ArrowRight, Image as ImageIcon, MapPin, Navigation, Heart,
   Phone, Facebook, MessageCircle, Clock, UserCheck, Award,
   X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles, Calendar, Info, ZoomIn,
-  Coffee, Wifi, Car, Shield, Waves, Wind, Tv // 🌟 นำเข้าไอคอนใหม่สำหรับ Facilities
+  Coffee, Wifi, Car, Shield, Waves, Wind, Tv 
 } from 'lucide-react';
 import ActivityCard from '../src/components/ActivityCard'; 
 import GoogleReviews from '../src/components/GoogleReviews'; 
@@ -101,6 +101,29 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 🌟 ตัวช่วยแก้ปัญหา: พิกัดเพี้ยนเวลาเปลี่ยนหน้ากลับมาหน้าหลัก 🌟
+  useEffect(() => {
+    if (homepageData && typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash;
+      
+      const timer = setTimeout(() => {
+        const element = document.querySelector(hash);
+        if (element) {
+          const headerOffset = 100; // ระยะห่างเผื่อ Navbar
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+          });
+        }
+      }, 500); // หน่วงเวลาให้ Layout ยืดตัวเสร็จก่อนเลื่อน
+
+      return () => clearTimeout(timer);
+    }
+  }, [homepageData]);
+
   // ==========================================
   // 🧹 ตั้งค่าตัวแปรข้อมูล
   // ==========================================
@@ -117,7 +140,7 @@ export default function Home() {
   const displayImages = galleryImages || [];
 
   // ==========================================
-  // 🌟 ฟังก์ชันแปลงชื่อ Icon เป็น Component (อัปเดตให้ตรงกับ Admin)
+  // 🌟 ฟังก์ชันแปลงชื่อ Icon เป็น Component
   // ==========================================
   const renderIcon = (iconName: string) => {
     const iconClass = "w-16 h-16 mx-auto mb-8 transition-transform group-hover:scale-110";
@@ -179,7 +202,7 @@ export default function Home() {
       />
 
       {/* 1. Hero Section */}
-      <section id="home" className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden pt-20 pb-12 bg-green-950">
+      <section id="home" className="relative min-h-screen md:h-screen flex items-center justify-center overflow-hidden pt-20 pb-12 bg-green-950 scroll-mt-24">
         <div className="absolute inset-0 z-0">
           {displaySlides.map((slideUrl: string, index: number) => (
             <div
@@ -263,7 +286,7 @@ export default function Home() {
       </section>
 
       {/* 3. About */}
-      <section id="about" className="py-24 scroll-mt-20 overflow-hidden">
+      <section id="about" className="py-24 scroll-mt-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative group">
@@ -286,9 +309,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. 🌟 Staff Section (แสดงเฉพาะคนที่เลือก) 🌟 */}
+      {/* 4. Staff Section */}
       {homeStaff.length > 0 && (
-      <section id="staff" className="py-24 bg-slate-50 scroll-mt-20">
+      <section id="staff" className="py-24 bg-slate-50 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-16 tracking-tight uppercase italic underline decoration-orange-500 decoration-8 underline-offset-[12px]">คณะผู้บริหารและทีมงาน</h2>
           
@@ -332,7 +355,7 @@ export default function Home() {
       )}
 
       {/* 5. Activities Section */}
-      <section id="activities" className="py-24 scroll-mt-20 bg-slate-50">
+      <section id="activities" className="py-24 scroll-mt-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 text-center md:text-left">
              <div>
@@ -375,7 +398,7 @@ export default function Home() {
 
       {/* 6. Facilities & Safety */}
       {displayFeatures.length > 0 && (
-      <section id="facilities" className="py-24 bg-green-950 text-white scroll-mt-20 overflow-hidden relative">
+      <section id="facilities" className="py-24 bg-green-950 text-white scroll-mt-24 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-96 h-96 bg-green-800 rounded-full blur-[100px] opacity-20 -mr-48 -mt-48"></div>
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="text-center mb-20">
@@ -397,7 +420,7 @@ export default function Home() {
       )}
 
       {/* 7. Packages Section */}
-      <section id="packages" className="py-24 bg-slate-50 scroll-mt-20">
+      <section id="packages" className="py-24 bg-slate-50 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-4 tracking-tighter uppercase">โปรแกรมและค่าบริการ</h2>
@@ -461,7 +484,7 @@ export default function Home() {
       </section>
 
       {/* 8. Gallery Section */}
-      <section id="gallery" className="py-24 bg-white scroll-mt-20">
+      <section id="gallery" className="py-24 bg-white scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-3xl md:text-5xl font-black text-green-950 mb-4 flex items-center justify-center gap-3 italic underline underline-offset-[12px] decoration-orange-500/20">
@@ -518,7 +541,7 @@ export default function Home() {
       </section>
 
       {/* 9. FAQ Section */}
-      <section id="faq" className="py-24 bg-slate-50">
+      <section id="faq" className="py-24 bg-slate-50 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
               <div>
@@ -556,7 +579,7 @@ export default function Home() {
       </section>
 
       {/* 10. Contact & Map Section */}
-      <section id="contact" className="py-24 scroll-mt-20 overflow-hidden bg-slate-50">
+      <section id="contact" className="py-24 scroll-mt-24 overflow-hidden bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             {/* ซ้าย: ข้อมูลติดต่อ */}
