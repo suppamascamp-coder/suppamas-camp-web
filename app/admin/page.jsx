@@ -4,11 +4,11 @@ import {
   LayoutDashboard, Home, Tent, Package, CalendarDays, 
   Image as ImageIcon, Settings, Menu, X, Bell, Plus, 
   Trash2, Search, TrendingUp, Users, Upload, Eye, 
-  Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit, Save, Type, Compass, ExternalLink, BedDouble, Utensils, Info, UserCheck, Newspaper, Flame, CheckCircle2, AlertCircle, Bold, Italic, Link as LinkIcon, CornerDownLeft
+  Lock, Mail, ArrowRight, ShieldCheck, Loader2, Map, Edit, Save, Type, Compass, ExternalLink, BedDouble, Utensils, Info, UserCheck, Newspaper, Flame, CheckCircle2, AlertCircle, Bold, Italic, Link as LinkIcon, CornerDownLeft,
+  Coffee, Wifi, Car, Shield, Waves, Wind, Tv, Sparkles // 🌟 เพิ่ม Sparkles สำหรับปุ่มจัดรูปแบบอัตโนมัติ
 } from 'lucide-react';
 
 import { db, storage, auth } from '../../src/lib/firebase';
-// 🌟 เพิ่ม onAuthStateChanged (สำหรับ Auto Login) และ signOut (สำหรับ Logout จริงๆ)
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getDoc, setDoc, doc, serverTimestamp, collection, query, orderBy, getDocs, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
@@ -52,10 +52,10 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthReady, setIsAuthReady] = useState(false); // 🌟 สถานะสำหรับรอเช็ค Auto Login
+  const [isAuthReady, setIsAuthReady] = useState(false); 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [activeTab, setActiveTab] = useState('news'); 
+  const [activeTab, setActiveTab] = useState('homepage'); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
@@ -68,20 +68,18 @@ export default function AdminPage() {
     { id: 'gallery', label: 'จัดการแกลลอรี่', icon: ImageIcon },
   ];
 
-  // 🌟 ระบบ Auto Login: เช็คว่าเคยเข้าสู่ระบบไว้หรือไม่ เมื่อเปิดหน้าเว็บมา
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setIsAuthenticated(true); // ถ้ามี User จำไว้ ให้ผ่านเข้าสู่ระบบทันที
+        setIsAuthenticated(true); 
       } else {
         setIsAuthenticated(false);
       }
-      setIsAuthReady(true); // โหลดการเช็คสิทธิ์เสร็จแล้ว
+      setIsAuthReady(true); 
     });
     return () => unsubscribe();
   }, []);
 
-  // 🌟 ฟังก์ชัน Logout (เคลียร์สิทธิ์ออกจาก Firebase)
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -104,9 +102,6 @@ export default function AdminPage() {
     }
   };
 
-  // ==========================================
-  // VIEW: หน้าจอ Loading ก่อนที่จะเช็ค Auto Login เสร็จ (ป้องกันหน้ากระพริบ)
-  // ==========================================
   if (!isAuthReady) {
     return (
       <div className="fixed inset-0 z-[100] bg-[#064e3b] flex flex-col items-center justify-center p-4">
@@ -116,9 +111,6 @@ export default function AdminPage() {
     );
   }
 
-  // ==========================================
-  // LOGIN VIEW
-  // ==========================================
   if (!isAuthenticated) {
     return (
       <div className="fixed inset-0 z-[100] bg-[#064e3b] flex items-center justify-center p-4 overflow-hidden">
@@ -174,51 +166,71 @@ export default function AdminPage() {
   }
 
   // ==========================================
-  // SIDEBAR & DASHBOARD VIEW
+  // DASHBOARD VIEW
   // ==========================================
-  const Sidebar = () => (
-    <div className={`bg-[#064e3b] text-white w-64 flex-shrink-0 h-full flex flex-col transition-transform duration-300 ease-in-out z-20 ${isMobileMenuOpen ? 'translate-x-0 absolute' : '-translate-x-full absolute'} md:relative md:translate-x-0`}>
-      <div className="p-6 flex items-center justify-between border-b border-white/10">
-        <div className="flex items-center gap-2"><Tent className="w-8 h-8 text-orange-500" /><span className="font-bold text-xl tracking-tight">Admin<span className="text-orange-500">Panel</span></span></div>
-        <button className="md:hidden text-gray-300" onClick={() => setIsMobileMenuOpen(false)}><X className="w-6 h-6" /></button>
-      </div>
-      <div className="flex-1 overflow-y-auto py-6">
-        <nav className="space-y-1 px-4">
-          {menuItems.map((item) => (
-            <button key={item.id} onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 ${activeTab === item.id ? 'bg-orange-500 text-white shadow-lg' : 'text-green-100/60 hover:bg-green-900 hover:text-white'}`}>
-              <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-green-100/60'}`} />
-              <span className="font-bold text-sm">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
-      <div className="p-6 border-t border-white/10">
-         {/* 🌟 ใช้งาน handleLogout ตรงนี้ด้วย */}
-         <button onClick={handleLogout} className="w-full mt-4 py-2 text-xs font-bold text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors">ออกจากระบบ</button>
-      </div>
-    </div>
-  );
+  const DashboardView = () => {
+    const [stats, setStats] = useState({ pendingBookings: 0, totalGallery: 0, schoolsThisMonth: 0, totalNews: 0 });
+    const [isLoading, setIsLoading] = useState(true);
 
-  const DashboardView = () => (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { title: 'ยอดจองที่รออนุมัติ', value: '12', icon: CalendarDays, color: 'text-orange-500', bg: 'bg-orange-100' },
-          { title: 'จำนวนรูปภาพทั้งหมด', value: '158', icon: ImageIcon, color: 'text-blue-500', bg: 'bg-blue-100' },
-          { title: 'โรงเรียนเดือนนี้', value: '24', icon: Users, color: 'text-green-500', bg: 'bg-green-100' },
-          { title: 'ผู้เข้าชมเว็บไซต์', value: '8.4k', icon: TrendingUp, color: 'text-purple-500', bg: 'bg-purple-100' },
-        ].map((stat, idx) => (
-          <div key={idx} className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-6 hover:shadow-xl transition-all group">
-            <div className={`p-5 rounded-2xl ${stat.bg} group-hover:scale-110 transition-transform`}><stat.icon className={`w-8 h-8 ${stat.color}`} /></div>
-            <div>
-              <p className="text-xs text-slate-400 font-black uppercase tracking-widest">{stat.title}</p>
-              <h3 className="text-3xl font-black text-slate-800 tracking-tight">{stat.value}</h3>
+    useEffect(() => {
+      const fetchStats = async () => {
+        try {
+          const gallerySnap = await getDocs(collection(db, "gallery"));
+          const newsSnap = await getDocs(collection(db, "news"));
+          const bookingsSnap = await getDocs(collection(db, "bookings"));
+          const allBookings = [];
+          bookingsSnap.forEach(doc => allBookings.push(doc.data()));
+
+          const now = new Date();
+          const currentMonth = now.getMonth();
+          const currentYear = now.getFullYear();
+
+          const monthlyBookings = allBookings.filter(booking => {
+            if (!booking.checkInDate) return false;
+            const bDate = booking.checkInDate.toDate(); 
+            return bDate.getMonth() === currentMonth && bDate.getFullYear() === currentYear;
+          });
+
+          const pending = allBookings.filter(b => b.status === 'pending').length;
+
+          setStats({
+            pendingBookings: pending,
+            totalGallery: gallerySnap.size,
+            schoolsThisMonth: monthlyBookings.length, 
+            totalNews: newsSnap.size
+          });
+        } catch (error) {
+          console.error("Error fetching stats:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchStats();
+    }, []);
+
+    if (isLoading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-orange-500 w-10 h-10" /></div>;
+
+    return (
+      <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { title: 'ยอดจองรออนุมัติ', value: stats.pendingBookings, icon: CalendarDays, color: 'text-orange-500', bg: 'bg-orange-100' },
+            { title: 'รูปภาพทั้งหมด', value: stats.totalGallery, icon: ImageIcon, color: 'text-blue-500', bg: 'bg-blue-100' },
+            { title: 'โรงเรียนเดือนนี้', value: stats.schoolsThisMonth, icon: Users, color: 'text-green-500', bg: 'bg-green-100' },
+            { title: 'ข่าวสารทั้งหมด', value: stats.totalNews, icon: Newspaper, color: 'text-purple-500', bg: 'bg-purple-100' },
+          ].map((stat, idx) => (
+            <div key={idx} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center gap-6 hover:shadow-xl transition-all group">
+              <div className={`p-5 rounded-2xl ${stat.bg} group-hover:scale-110 transition-transform`}><stat.icon className={`w-8 h-8 ${stat.color}`} /></div>
+              <div>
+                <p className="text-xs text-slate-400 font-black uppercase tracking-widest">{stat.title}</p>
+                <h3 className="text-3xl font-black text-slate-800 tracking-tight">{stat.value}</h3>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // ==========================================
   // HOMEPAGE VIEW (จัดการหน้าแรก)
@@ -238,7 +250,7 @@ export default function AdminPage() {
 
     const [texts, setTexts] = useState(defaultTexts);
     const [highlightCards, setHighlightCards] = useState([{}, {}, {}, {}]); 
-    const [featureCards, setFeatureCards] = useState([]);
+    const [featureCards, setFeatureCards] = useState([]); 
     
     const [staffList, setStaffList] = useState([
       { name: "นายมนตรี คงสกุลถาวร", pos: "ผู้อำนวยการค่ายอนุสรณ์ศุภมาศ", img: "", showOnHome: true },
@@ -249,6 +261,15 @@ export default function AdminPage() {
     const [slides, setSlides] = useState([]);
 
     const fileInputRef = useRef(null);
+
+    const iconList = [
+      { name: 'Coffee', icon: Coffee }, { name: 'Utensils', icon: Utensils }, 
+      { name: 'BedDouble', icon: BedDouble }, { name: 'Meeting', icon: Users },
+      { name: 'Wifi', icon: Wifi }, { name: 'Parking', icon: Car },
+      { name: 'Security', icon: Shield }, { name: 'Water', icon: Waves },
+      { name: 'Air', icon: Wind }, { name: 'Tv', icon: Tv }, { name: 'Info', icon: Info },
+      { name: 'ShieldCheck', icon: ShieldCheck }
+    ];
 
     useEffect(() => {
       const fetchData = async () => {
@@ -324,8 +345,9 @@ export default function AdminPage() {
       }
     };
 
-    const addFeatureCard = () => setFeatureCards([...featureCards, { title: 'บริการใหม่', desc: 'รายละเอียดสั้นๆ...', icon: 'Info' }]);
-    const deleteFeatureCard = (index) => { if(window.confirm("ยืนยันการลบ?")) setFeatureCards(featureCards.filter((_, i) => i !== index)); };
+    const handleAddFacility = () => {
+      setFeatureCards([...featureCards, { title: 'บริการใหม่', desc: 'รายละเอียดสั้นๆ...', icon: 'Info' }]);
+    };
 
     const addStaff = () => setStaffList([...staffList, { name: "", pos: "", img: "", showOnHome: false }]);
     const deleteStaff = (idx) => { if(window.confirm("ลบรายชื่อท่านนี้?")) setStaffList(staffList.filter((_, i) => i !== idx)); };
@@ -374,6 +396,57 @@ export default function AdminPage() {
                 </div>
             </div>
           </div>
+
+          {/* 🌟 2. จัดการสิ่งอำนวยความสะดวก (#facilities) */}
+          <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+             <div className="flex justify-between items-center mb-8">
+                <h3 className="text-xl font-black flex items-center gap-2 text-green-950">
+                  <Info className="w-5 h-5 text-orange-500" /> จัดการสิ่งอำนวยความสะดวก (Facilities)
+                </h3>
+                <button type="button" onClick={handleAddFacility} className="bg-orange-50 text-orange-600 px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-orange-500 hover:text-white transition-all">
+                  <Plus className="w-4 h-4" /> เพิ่มรายการ
+                </button>
+             </div>
+             
+             {featureCards.length === 0 ? (
+               <div className="text-center py-12 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
+                  <Info className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                  <p className="text-slate-500 font-bold text-sm">ยังไม่มีข้อมูลสิ่งอำนวยความสะดวก</p>
+                  <p className="text-slate-400 text-xs mt-1">กดปุ่ม "เพิ่มรายการ" ด้านบนเพื่อเริ่มต้น</p>
+               </div>
+             ) : (
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {featureCards.map((card, idx) => {
+                    const SelectedIcon = iconList.find(i => i.name === card.icon)?.icon || Info;
+                    return (
+                    <div key={idx} className="p-6 bg-slate-50 rounded-3xl border border-slate-200 relative group hover:border-orange-300 transition-colors shadow-sm">
+                       <button type="button" onClick={() => setFeatureCards(featureCards.filter((_,i)=>i!==idx))} className="absolute -top-3 -right-3 bg-white text-rose-500 p-2 rounded-full shadow-md hover:bg-rose-500 hover:text-white transition-all border border-slate-100 z-10" title="ลบรายการนี้">
+                         <Trash2 className="w-4 h-4" />
+                       </button>
+                       <div className="flex gap-4 mb-4">
+                          <div className="w-1/3">
+                             <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">เลือกไอคอน</label>
+                             <div className="relative">
+                                <div className="absolute left-2 top-1/2 -translate-y-1/2 text-orange-500 pointer-events-none">
+                                   <SelectedIcon className="w-4 h-4" />
+                                </div>
+                                <select value={card.icon} onChange={e=>{const n=[...featureCards]; n[idx].icon=e.target.value; setFeatureCards(n)}} className="w-full pl-8 p-2.5 text-xs bg-white border border-slate-200 rounded-xl font-bold outline-none focus:border-orange-500 appearance-none cursor-pointer">
+                                   {iconList.map(i => <option key={i.name} value={i.name}>{i.name}</option>)}
+                                </select>
+                             </div>
+                          </div>
+                          <div className="w-2/3">
+                             <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">ชื่อเรียก</label>
+                             <input type="text" value={card.title} onChange={e=>{const n=[...featureCards]; n[idx].title=e.target.value; setFeatureCards(n)}} placeholder="เช่น ห้องน้ำสะอาด" className="w-full p-2.5 text-xs bg-white border border-slate-200 rounded-xl font-bold outline-none focus:border-orange-500" />
+                          </div>
+                       </div>
+                       <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">คำอธิบาย</label>
+                       <textarea rows="3" value={card.desc} onChange={e=>{const n=[...featureCards]; n[idx].desc=e.target.value; setFeatureCards(n)}} placeholder="อธิบายรายละเอียดเพิ่มเติมให้ลูกค้ารับทราบ..." className="w-full p-3 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:border-orange-500 resize-none" />
+                    </div>
+                  )})}
+               </div>
+             )}
+          </section>
 
           {/* รูปภาพสไลด์พื้นหลัง */}
           <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
@@ -457,7 +530,7 @@ export default function AdminPage() {
   };
 
   // ==========================================
-  // NEWS VIEW (จัดการข่าวสาร) - ใช้ Mini HTML Toolbar
+  // 🌟 NEWS VIEW (จัดการข่าวสาร พร้อมฟังก์ชันอัปเกรดใหม่)
   // ==========================================
   const NewsView = () => {
     const [news, setNews] = useState([]);
@@ -470,7 +543,12 @@ export default function AdminPage() {
     const [formData, setFormData] = useState(initialForm);
     const [pendingFile, setPendingFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
+    
     const fileInputRef = useRef(null);
+    
+    // 🌟 เพิ่ม Ref และ State สำหรับ "แทรกรูปภาพในเนื้อหา"
+    const contentFileInputRef = useRef(null);
+    const [isContentImageUploading, setIsContentImageUploading] = useState(false);
 
     useEffect(() => {
       const fetchNews = async () => {
@@ -495,6 +573,38 @@ export default function AdminPage() {
       } catch (error) { alert("เกิดข้อผิดพลาด"); }
     };
 
+    // 🌟 ฟังก์ชันจัดการปุ่ม "แทรกรูปภาพลงในเนื้อหา"
+    const handleContentImageSelect = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      setIsContentImageUploading(true);
+      try {
+        const compressedFile = await compressImage(file, 1000, 0.8);
+        const storageRef = ref(storage, `news_content/${Date.now()}_${file.name}`);
+        const uploadTask = await uploadBytesResumable(storageRef, compressedFile);
+        const downloadURL = await getDownloadURL(uploadTask.ref);
+
+        // แทรกโค้ด HTML รูปภาพลงไปใน Textarea
+        const imgTag = `\n<img src="${downloadURL}" alt="content-image" class="w-full rounded-2xl shadow-lg my-6 object-cover" />\n`;
+        insertHTMLTag(imgTag, '');
+      } catch (error) {
+        alert("อัปโหลดรูปภาพแทรกเนื้อหาไม่สำเร็จ");
+      } finally {
+        setIsContentImageUploading(false);
+        if (contentFileInputRef.current) contentFileInputRef.current.value = '';
+      }
+    };
+
+    // 🌟 ฟังก์ชันจัดการปุ่ม "จัดย่อหน้าอัตโนมัติ" (แปลง Enter เป็น <br/>)
+    const handleFormatNewlines = () => {
+      const text = formData.content;
+      if (!text) return;
+      // แปลง Enter (\n) ที่ยังไม่มี <br/> ให้กลายเป็น <br/>\n
+      const formattedText = text.replace(/(?:\r\n|\r|\n)(?!<br\s*\/?>)/g, '<br/>\n');
+      setFormData({ ...formData, content: formattedText });
+      alert("✅ จัดระเบียบการเว้นบรรทัดเรียบร้อยแล้ว!");
+    };
+
     const openAddModal = () => { setEditingId(null); setFormData(initialForm); setPendingFile(null); setPreviewUrl(null); setIsModalOpen(true); };
     const openEditModal = (item) => { setEditingId(item.id); setFormData({ content: '', ...item }); setPendingFile(null); setPreviewUrl(item.img); setIsModalOpen(true); };
 
@@ -507,6 +617,7 @@ export default function AdminPage() {
         } catch (error) { alert("ลบไม่สำเร็จ"); }
       }
     };
+    
     const generateSlug = (text) => {
       return text.toString().toLowerCase()
         .replace(/\s+/g, '-') 
@@ -632,24 +743,51 @@ export default function AdminPage() {
                   <textarea rows="2" required placeholder="พิมพ์ข้อความธรรมดาเท่านั้น..." value={formData.excerpt} onChange={e => setFormData({...formData, excerpt: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium resize-none"></textarea>
                 </div>
 
+                {/* 🌟 เครื่องมือแต่งบทความที่ได้รับการอัปเกรดแล้ว */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">เนื้อหาข่าวฉบับเต็ม</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2 flex justify-between">
+                     <span>เนื้อหาข่าวฉบับเต็ม</span>
+                     <span className="text-orange-500 font-medium normal-case">สามารถก๊อปปี้จาก Word มาวางได้เลยครับ</span>
+                  </label>
                   <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
-                    <div className="bg-slate-100 p-2 border-b border-slate-200 flex flex-wrap gap-2 items-center">
-                      <span className="text-xs font-bold text-slate-500 mr-2 ml-2 uppercase">ตัวช่วยแต่งบทความ :</span>
-                      <button type="button" onClick={() => insertHTMLTag('<strong>', '</strong>')} className="p-1.5 hover:bg-white rounded text-slate-700 transition-colors shadow-sm" title="ตัวหนา"><Bold className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => insertHTMLTag('<em>', '</em>')} className="p-1.5 hover:bg-white rounded text-slate-700 transition-colors shadow-sm" title="ตัวเอียง"><Italic className="w-4 h-4" /></button>
-                      <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                      <button type="button" onClick={() => insertHTMLTag('<h2>', '</h2>')} className="p-1.5 hover:bg-white rounded text-slate-700 transition-colors shadow-sm font-black text-xs flex items-center" title="หัวข้อใหญ่">H2</button>
-                      <button type="button" onClick={() => insertHTMLTag('<h3>', '</h3>')} className="p-1.5 hover:bg-white rounded text-slate-700 transition-colors shadow-sm font-bold text-xs flex items-center" title="หัวข้อย่อย">H3</button>
-                      <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                      <button type="button" onClick={() => insertHTMLTag('<a href="ใส่ลิงก์ที่นี่" target="_blank" class="text-orange-500 underline">', '</a>')} className="p-1.5 hover:bg-white rounded text-slate-700 transition-colors shadow-sm" title="แทรกลิงก์"><LinkIcon className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => insertHTMLTag('<br/>\n', '')} className="p-1.5 hover:bg-white rounded text-slate-700 transition-colors shadow-sm" title="ขึ้นบรรทัดใหม่"><CornerDownLeft className="w-4 h-4" /></button>
+                    
+                    <div className="bg-slate-100 p-2 flex gap-3 border-b border-slate-200 overflow-x-auto whitespace-nowrap items-center">
+                      <span className="text-[10px] font-black text-slate-400 uppercase mr-2 shrink-0">ตัวช่วยแต่งบทความ :</span>
+                      
+                      {/* จัดรูปแบบข้อความ */}
+                      <div className="flex items-center gap-1 border-r border-slate-300 pr-3 shrink-0">
+                         <button type="button" onClick={() => insertHTMLTag('<strong>', '</strong>')} className="p-2 hover:bg-white rounded shadow-sm text-slate-700" title="ตัวหนา"><Bold className="w-4 h-4"/></button>
+                         <button type="button" onClick={() => insertHTMLTag('<em>', '</em>')} className="p-2 hover:bg-white rounded shadow-sm text-slate-700" title="ตัวเอียง"><Italic className="w-4 h-4"/></button>
+                         <button type="button" onClick={() => insertHTMLTag('<h2>', '</h2>')} className="p-2 hover:bg-white rounded font-black shadow-sm text-slate-700 text-xs">H2</button>
+                         <button type="button" onClick={() => insertHTMLTag('<h3>', '</h3>')} className="p-2 hover:bg-white rounded font-bold shadow-sm text-slate-700 text-xs">H3</button>
+                      </div>
+
+                      {/* แทรกสื่อ */}
+                      <div className="flex items-center gap-1 border-r border-slate-300 pr-3 shrink-0">
+                         <button type="button" onClick={() => insertHTMLTag('<a href="ใส่ลิงก์ที่นี่" target="_blank" class="text-orange-500 underline font-bold">', '</a>')} className="p-2 hover:bg-white rounded shadow-sm text-slate-700" title="แทรกลิงก์"><LinkIcon className="w-4 h-4"/></button>
+                         
+                         {/* 🌟 ปุ่มแทรกรูปภาพลงเนื้อหา */}
+                         <input type="file" accept="image/*" ref={contentFileInputRef} onChange={handleContentImageSelect} className="hidden" />
+                         <button type="button" onClick={() => contentFileInputRef.current.click()} disabled={isContentImageUploading} className="p-2 hover:bg-white rounded shadow-sm text-orange-600 font-bold text-xs flex items-center gap-1" title="แทรกรูปภาพลงในเนื้อหาข่าว">
+                           {isContentImageUploading ? <Loader2 className="animate-spin w-4 h-4" /> : <ImageIcon className="w-4 h-4" />} แทรกรูปภาพ
+                         </button>
+                      </div>
+
+                      {/* จัดบรรทัด */}
+                      <div className="flex items-center gap-1 shrink-0">
+                         <button type="button" onClick={() => insertHTMLTag('<br/>\n', '')} className="p-2 hover:bg-white rounded shadow-sm text-slate-700" title="ขึ้นบรรทัดใหม่ 1 บรรทัด"><CornerDownLeft className="w-4 h-4"/></button>
+                         
+                         {/* 🌟 ปุ่มแปลง Enter เป็น <br/> อัตโนมัติ */}
+                         <button type="button" onClick={handleFormatNewlines} className="p-2 hover:bg-white rounded shadow-sm text-green-600 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1 bg-green-50 border border-green-200 ml-2" title="กดปุ่มนี้หลังจากก๊อปปี้ข้อความมาวาง เพื่อให้มันเว้นบรรทัดให้เอง">
+                            <Sparkles className="w-3 h-3" /> แปลงการเว้นบรรทัดอัตโนมัติ
+                         </button>
+                      </div>
                     </div>
+
                     <textarea 
                       id="news-content-textarea"
-                      rows="8" 
-                      placeholder="พิมพ์เนื้อหาข่าวฉบับเต็มที่นี่... สามารถใช้ปุ่มด้านบนเพื่อคลุมดำและจัดรูปแบบข้อความได้ครับ"
+                      rows="12" 
+                      placeholder="พิมพ์เนื้อหาข่าว หรือก๊อปปี้บทความมาวางที่นี่... จากนั้นกดปุ่ม [แปลงการเว้นบรรทัดอัตโนมัติ] ด้านบนครับ"
                       value={formData.content} 
                       onChange={e => setFormData({...formData, content: e.target.value})} 
                       className="w-full px-4 py-3 bg-white font-medium resize-y outline-none focus:ring-2 focus:ring-inset focus:ring-orange-500/20"
@@ -661,7 +799,7 @@ export default function AdminPage() {
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-2">รูปภาพหน้าปก</label>
                   <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
                   <div className="flex gap-4 items-center">
-                    <button type="button" onClick={() => fileInputRef.current.click()} className="px-6 py-4 bg-orange-50 text-orange-600 rounded-xl font-bold text-sm"><ImageIcon className="w-5 h-5 inline mr-2" /> เลือกรูปภาพ</button>
+                    <button type="button" onClick={() => fileInputRef.current.click()} className="px-6 py-4 bg-orange-50 text-orange-600 rounded-xl font-bold text-sm"><ImageIcon className="w-5 h-5 inline mr-2" /> เลือกรูปหน้าปก</button>
                     {previewUrl && <img src={previewUrl} className="w-20 h-20 rounded-xl object-cover border border-slate-200" alt="preview" />}
                   </div>
                 </div>
@@ -970,7 +1108,7 @@ export default function AdminPage() {
     const [filter, setFilter] = useState('ทั้งหมด');
     
     const [showUploadModal, setShowUploadModal] = useState(false);
-    const [editingId, setEditingId] = useState(null); // 🌟 เพิ่มสถานะสำหรับรู้ว่ากำลัง Edit
+    const [editingId, setEditingId] = useState(null); 
     const [pendingFile, setPendingFile] = useState(null);
     const [imageName, setImageName] = useState('');
     const [imageCategory, setImageCategory] = useState('กิจกรรม');
@@ -991,7 +1129,6 @@ export default function AdminPage() {
       fetchImages();
     }, []);
 
-    // ตอนเลือกไฟล์อัปโหลดใหม่
     const handleFileSelect = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -1000,7 +1137,6 @@ export default function AdminPage() {
         setPendingFile(compressedFile);
         setPreviewUrl(URL.createObjectURL(compressedFile)); 
         
-        // ถ้าเป็นการอัปโหลดใหม่ ไม่ใช่แก้รูปเดิม
         if (!editingId) {
           setImageName(''); 
           setImageCategory(filter === 'ทั้งหมด' ? 'กิจกรรม' : filter); 
@@ -1010,23 +1146,21 @@ export default function AdminPage() {
       } catch (error) { alert("เกิดข้อผิดพลาด"); }
     };
 
-    // 🌟 เปิดหน้าต่างเพื่ออัปโหลดใหม่
     const openAddModal = () => {
       setEditingId(null);
       setPendingFile(null);
       setPreviewUrl(null);
       setImageName('');
       setImageCategory('กิจกรรม');
-      fileInputRef.current.click(); // เรียกเปิดช่องเลือกไฟล์เลย
+      fileInputRef.current.click(); 
     };
 
-    // 🌟 เปิดหน้าต่างเพื่อแก้ไขข้อมูล (Edit)
     const openEditModal = (img) => {
       setEditingId(img.id);
       setImageName(img.name);
       setImageCategory(img.category);
       setPreviewUrl(img.src);
-      setPendingFile(null); // ยังไม่ได้เลือกไฟล์ใหม่
+      setPendingFile(null); 
       setShowUploadModal(true);
     };
 
@@ -1037,13 +1171,11 @@ export default function AdminPage() {
       let finalImageUrl = previewUrl;
       let finalStoragePath = '';
 
-      // หา path เก่ากรณีที่ทำการแก้ไข
       if (editingId) {
          const existingImg = images.find(i => i.id === editingId);
          if (existingImg) finalStoragePath = existingImg.storagePath || '';
       }
 
-      // ถ้ามีการเลือกไฟล์ใหม่ (ทั้งกรณี Add ใหม่ และ Edit แล้วเปลี่ยนรูป)
       if (pendingFile) {
         const file = pendingFile;
         const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
@@ -1074,11 +1206,9 @@ export default function AdminPage() {
 
       try {
         if (editingId) {
-          // อัปเดตข้อมูลเดิม
           await updateDoc(doc(db, "gallery", editingId), imgData);
           setImages(images.map(img => img.id === editingId ? { ...img, ...imgData } : img));
         } else {
-          // เพิ่มข้อมูลใหม่
           imgData.createdAt = serverTimestamp();
           const docRef = await addDoc(collection(db, "gallery"), imgData);
           setImages([{ id: docRef.id, ...imgData }, ...images]);
@@ -1101,7 +1231,6 @@ export default function AdminPage() {
           setImages(images.filter(img => img.id !== id));
         } catch (err) {
           console.error("Delete Error: ", err);
-          // ลบข้อมูลใน Firestore แต่ไฟล์ภาพอาจจะไม่อยู่แล้ว
           setImages(images.filter(img => img.id !== id)); 
         }
       }

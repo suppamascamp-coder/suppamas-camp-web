@@ -5,7 +5,8 @@ import {
   ShieldCheck, BedDouble, Utensils, AlertCircle,
   ArrowRight, Image as ImageIcon, MapPin, Navigation, Heart,
   Phone, Facebook, MessageCircle, Clock, UserCheck, Award,
-  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles, Calendar, Info, ZoomIn
+  X, ChevronUp, HelpCircle, Briefcase, ChevronDown, Map, Loader2, Sparkles, Calendar, Info, ZoomIn,
+  Coffee, Wifi, Car, Shield, Waves, Wind, Tv // 🌟 นำเข้าไอคอนใหม่สำหรับ Facilities
 } from 'lucide-react';
 import ActivityCard from '../src/components/ActivityCard'; 
 import GoogleReviews from '../src/components/GoogleReviews'; 
@@ -101,8 +102,7 @@ export default function Home() {
   }, []);
 
   // ==========================================
-  // 🧹 ตั้งค่าตัวแปรข้อมูล (ไม่มีข้อมูลสำรองแล้ว)
-  // หากไม่มีข้อมูลจาก Firebase จะแสดงค่าว่าง () หรือ [] ป้องกันเว็บพัง
+  // 🧹 ตั้งค่าตัวแปรข้อมูล
   // ==========================================
   
   const displayTexts = homepageData?.texts || {};
@@ -117,14 +117,22 @@ export default function Home() {
   const displayImages = galleryImages || [];
 
   // ==========================================
-
-  // ฟังก์ชันแปลงชื่อ Icon เป็น Component
+  // 🌟 ฟังก์ชันแปลงชื่อ Icon เป็น Component (อัปเดตให้ตรงกับ Admin)
+  // ==========================================
   const renderIcon = (iconName: string) => {
     const iconClass = "w-16 h-16 mx-auto mb-8 transition-transform group-hover:scale-110";
     switch(iconName) {
       case 'ShieldCheck': return <ShieldCheck className={`${iconClass} text-orange-500`} />;
       case 'BedDouble': return <BedDouble className={`${iconClass} text-blue-400`} />;
       case 'Utensils': return <Utensils className={`${iconClass} text-green-400`} />;
+      case 'Coffee': return <Coffee className={`${iconClass} text-amber-500`} />;
+      case 'Wifi': return <Wifi className={`${iconClass} text-blue-500`} />;
+      case 'Car': return <Car className={`${iconClass} text-slate-500`} />;
+      case 'Security': return <Shield className={`${iconClass} text-green-500`} />;
+      case 'Waves': return <Waves className={`${iconClass} text-cyan-400`} />;
+      case 'Wind': return <Wind className={`${iconClass} text-teal-400`} />;
+      case 'Tv': return <Tv className={`${iconClass} text-slate-400`} />;
+      case 'Meeting': return <Users className={`${iconClass} text-purple-400`} />;
       default: return <Info className={`${iconClass} text-orange-400`} />;
     }
   };
