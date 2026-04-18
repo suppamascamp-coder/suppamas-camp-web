@@ -16,6 +16,7 @@ export default function Navbar() {
     { name: 'สิ่งอำนวยความสะดวก', href: '/#facilities' },
     { name: 'แพ็กเกจ', href: '/#packages' },
     { name: 'ภาพบรรยากาศ', href: '/#gallery' },
+    { name: 'ข่าวสาร', href: '/news' },
     { name: 'ติดต่อเรา', href: '/#contact' },
   ];
 

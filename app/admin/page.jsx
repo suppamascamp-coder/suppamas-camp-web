@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 
 import { db, storage, auth } from '../../src/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+// 🌟 เพิ่ม onAuthStateChanged (สำหรับ Auto Login) และ signOut (สำหรับ Logout จริงๆ)
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getDoc, setDoc, doc, serverTimestamp, collection, query, orderBy, getDocs, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 
@@ -51,6 +52,7 @@ const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false); // 🌟 สถานะสำหรับรอเช็ค Auto Login
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [activeTab, setActiveTab] = useState('news'); 
@@ -66,6 +68,29 @@ export default function AdminPage() {
     { id: 'gallery', label: 'จัดการแกลลอรี่', icon: ImageIcon },
   ];
 
+  // 🌟 ระบบ Auto Login: เช็คว่าเคยเข้าสู่ระบบไว้หรือไม่ เมื่อเปิดหน้าเว็บมา
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true); // ถ้ามี User จำไว้ ให้ผ่านเข้าสู่ระบบทันที
+      } else {
+        setIsAuthenticated(false);
+      }
+      setIsAuthReady(true); // โหลดการเช็คสิทธิ์เสร็จแล้ว
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 🌟 ฟังก์ชัน Logout (เคลียร์สิทธิ์ออกจาก Firebase)
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoggingIn(true);
@@ -73,11 +98,23 @@ export default function AdminPage() {
       await signInWithEmailAndPassword(auth, loginForm.email, loginForm.password);
       setIsAuthenticated(true);
     } catch (error) { 
-      alert("ข้อมูลไม่ถูกต้อง"); 
+      alert("อีเมล หรือ รหัสผ่าน ไม่ถูกต้องครับ"); 
     } finally { 
       setIsLoggingIn(false); 
     }
   };
+
+  // ==========================================
+  // VIEW: หน้าจอ Loading ก่อนที่จะเช็ค Auto Login เสร็จ (ป้องกันหน้ากระพริบ)
+  // ==========================================
+  if (!isAuthReady) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-[#064e3b] flex flex-col items-center justify-center p-4">
+         <Loader2 className="w-12 h-12 animate-spin text-orange-500 mb-4" />
+         <p className="text-green-100 font-bold animate-pulse">กำลังตรวจสอบสิทธิ์ผู้ดูแลระบบ...</p>
+      </div>
+    );
+  }
 
   // ==========================================
   // LOGIN VIEW
@@ -156,7 +193,8 @@ export default function AdminPage() {
         </nav>
       </div>
       <div className="p-6 border-t border-white/10">
-         <button onClick={() => setIsAuthenticated(false)} className="w-full mt-4 py-2 text-xs font-bold text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors">ออกจากระบบ</button>
+         {/* 🌟 ใช้งาน handleLogout ตรงนี้ด้วย */}
+         <button onClick={handleLogout} className="w-full mt-4 py-2 text-xs font-bold text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors">ออกจากระบบ</button>
       </div>
     </div>
   );
@@ -471,10 +509,10 @@ export default function AdminPage() {
     };
     const generateSlug = (text) => {
       return text.toString().toLowerCase()
-        .replace(/\s+/g, '-') // เปลี่ยนช่องว่างเป็นขีด
-        .replace(/[^\w\-\u0E00-\u0E7F]+/g, '') // ลบอักขระพิเศษ (แต่เก็บภาษาไทย \u0E00-\u0E7F ไว้)
-        .replace(/\-\-+/g, '-') // ลบขีดที่ซ้ำกัน
-        .replace(/^-+/, '').replace(/-+$/, ''); // ลบขีดหัวท้าย
+        .replace(/\s+/g, '-') 
+        .replace(/[^\w\-\u0E00-\u0E7F]+/g, '') 
+        .replace(/\-\-+/g, '-') 
+        .replace(/^-+/, '').replace(/-+$/, ''); 
     };
 
     const handleSave = async (e) => {
@@ -497,21 +535,16 @@ export default function AdminPage() {
 
       try {
         if (editingId) {
-          // กรณีอัปเดตข่าวเดิม
           await updateDoc(doc(db, "news", editingId), newsDataToSave);
           setNews(news.map(n => n.id === editingId ? { ...n, ...newsDataToSave } : n));
         } else {
-          // 🌟 กรณีสร้างข่าวใหม่ (ใช้ชื่อเรื่องมาทำเป็น ID แทนการสุ่ม)
           let slug = generateSlug(formData.title);
-          
-          // เช็คว่า URL ซ้ำไหม ถ้าซ้ำให้เติมตัวเลขต่อท้าย
           const checkDoc = await getDoc(doc(db, "news", slug));
           if (checkDoc.exists()) {
             slug = `${slug}-${Date.now().toString().slice(-4)}`;
           }
 
           newsDataToSave.createdAt = serverTimestamp();
-          // ใช้ setDoc แทน addDoc เพื่อกำหนด ID เอง
           await setDoc(doc(db, "news", slug), newsDataToSave);
           setNews([{ id: slug, ...newsDataToSave }, ...news]);
         }
@@ -519,7 +552,6 @@ export default function AdminPage() {
       } catch (error) { alert("บันทึกไม่สำเร็จ"); } finally { setIsUploading(false); }
     };
 
-    // 🌟 ฟังก์ชันแทรก HTML Tags ลงใน Textarea
     const insertHTMLTag = (openTag, closeTag) => {
       const textarea = document.getElementById('news-content-textarea');
       if (!textarea) return;
@@ -535,7 +567,6 @@ export default function AdminPage() {
         ...formData,
         content: before + openTag + selected + closeTag + after
       });
-      // นำเมาส์กลับไปโฟกัสที่ช่องเดิม
       setTimeout(() => textarea.focus(), 10);
     };
 
@@ -572,7 +603,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Modal เพิ่ม/แก้ไขข่าวสาร */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl relative">
@@ -599,11 +629,9 @@ export default function AdminPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-2">คำอธิบายสั้นๆ (แสดงบนการ์ด)</label>
-                  {/* 🚨 แนะนำให้พิมพ์เฉพาะข้อความธรรมดา ห้ามใส่โค้ด HTML ตรงนี้นะครับ */}
                   <textarea rows="2" required placeholder="พิมพ์ข้อความธรรมดาเท่านั้น..." value={formData.excerpt} onChange={e => setFormData({...formData, excerpt: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium resize-none"></textarea>
                 </div>
 
-                {/* 🌟 บริเวณเนื้อหาข่าวฉบับเต็ม พร้อม Mini Toolbar */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-2">เนื้อหาข่าวฉบับเต็ม</label>
                   <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
@@ -629,7 +657,6 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-2">รูปภาพหน้าปก</label>
                   <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
@@ -638,16 +665,17 @@ export default function AdminPage() {
                     {previewUrl && <img src={previewUrl} className="w-20 h-20 rounded-xl object-cover border border-slate-200" alt="preview" />}
                   </div>
                 </div>
+
                 <div className="mb-4">
-  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Alt Text (คำอธิบายรูปภาพสำหรับ Google)</label>
-  <input 
-    type="text" 
-    placeholder="เช่น รูปเด็กนักเรียนกำลังทำกิจกรรมรอบกองไฟ" 
-    value={formData.altText || ''} 
-    onChange={e => setFormData({...formData, altText: e.target.value})} 
-    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:border-orange-500" 
-  />
-</div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Alt Text (คำอธิบายรูปภาพสำหรับ Google)</label>
+                  <input 
+                    type="text" 
+                    placeholder="เช่น รูปเด็กนักเรียนกำลังทำกิจกรรมรอบกองไฟ" 
+                    value={formData.altText || ''} 
+                    onChange={e => setFormData({...formData, altText: e.target.value})} 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:border-orange-500" 
+                  />
+                </div>
 
                 <div className="flex gap-4 pt-6 mt-6 border-t border-slate-100">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-xl font-bold">ยกเลิก</button>
@@ -1197,7 +1225,8 @@ export default function AdminPage() {
            </button>
          ))}
          <div className="mt-auto p-4 bg-white/5 rounded-2xl border border-white/5">
-            <button onClick={() => setIsAuthenticated(false)} className="w-full py-2 text-xs font-black text-rose-300 hover:bg-rose-500/10 rounded-xl uppercase tracking-widest">Logout</button>
+            {/* 🌟 ใช้งาน handleLogout ตรงนี้ด้วย */}
+            <button onClick={handleLogout} className="w-full py-2 text-xs font-black text-rose-300 hover:bg-rose-500/10 rounded-xl uppercase tracking-widest">Logout</button>
          </div>
       </nav>
       
@@ -1218,6 +1247,10 @@ export default function AdminPage() {
                   <item.icon className="w-5 h-5" /> {item.label}
                 </button>
               ))}
+              {/* 🌟 ใช้งาน handleLogout บนมือถือด้วย */}
+              <button onClick={handleLogout} className="mt-auto flex items-center gap-3 p-4 rounded-2xl font-bold text-rose-300 hover:bg-rose-500/10 text-left">
+                Logout
+              </button>
             </div>
           </div>
         )}
