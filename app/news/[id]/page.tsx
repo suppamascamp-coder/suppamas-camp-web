@@ -1,11 +1,11 @@
 import React from 'react';
 import { db } from '../../../src/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, Calendar, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import ShareButtons from '../../../src/components/ShareButtons'; // 🌟 นำเข้าปุ่มแชร์ใหม่
 
-// 🌟 1. ฟังก์ชันสร้าง Metadata (เพิ่ม try-catch ป้องกันบอท LINE เอ๋อเวลาดึงข้อมูลไม่ทัน)
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   try {
     const resolvedParams = await params;
@@ -17,11 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     const newsData = docSnap.data();
     const currentUrl = `https://www.suppamascamp.me/news/${resolvedParams.id}`;
-    
-    // ตั้งค่ารูปหน้าปก (ถ้าไม่ได้อัปรูป ให้ใช้รูป og-image.jpg เป็นค่าเริ่มต้น)
     const coverImage = newsData.img || 'https://www.suppamascamp.me/og-image.jpg';
-    
-    // 🌟 ดึง Alt Text (ถ้ามี) หากไม่มีให้ใช้ชื่อข่าวแทน
     const imageAltText = newsData.altText || newsData.title;
 
     return {
@@ -32,12 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         description: newsData.excerpt,
         url: currentUrl,
         siteName: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ',
-        images: [{ 
-          url: coverImage, 
-          width: 1200, 
-          height: 630,
-          alt: imageAltText // 🌟 เพิ่ม Alt Text เข้าไปใน OpenGraph
-        }],
+        images: [{ url: coverImage, width: 1200, height: 630, alt: imageAltText }],
         type: 'article',
       },
       twitter: {
@@ -52,27 +43,22 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
-// 🌟 2. หน้าแสดงผลหลัก (เป็น Server Component โหลดไวสุดๆ และ SEO ดีเยี่ยม)
 export default async function NewsDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   const id = decodeURIComponent(resolvedParams.id);
   
   let newsData: any = null;
-  let docId = '';
 
-  // 🌟 เพิ่ม try-catch ให้หน้าเว็บปลอดภัย 100% ไม่พังแน่นอน
   try {
     const docRef = doc(db, "news", id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       newsData = docSnap.data();
-      docId = docSnap.id;
     }
   } catch (error) {
     console.error("Error fetching news:", error);
   }
 
-  // หากดึงข้อมูลมาไม่เจอ (หรือ URL ผิด)
   if (!newsData) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 pt-20">
@@ -87,20 +73,18 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
   const encodedId = encodeURIComponent(id);
   const currentUrl = `https://www.suppamascamp.me/news/${encodedId}`;
   
-  // 🌟 แก้ไขระบบวันที่: แปลง Firebase Timestamp เป็นวันที่ภาษาไทยอย่างปลอดภัย
   let dateString = 'อัปเดตล่าสุด';
   if (newsData.createdAt) {
     if (newsData.createdAt.seconds) {
-      dateString = new Date(newsData.createdAt.seconds * 1000).toLocaleDateString('th-TH');
+      dateString = new Date(newsData.createdAt.seconds * 1000).toLocaleDateString('th-TH', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
     } else if (newsData.createdAt.toDate) {
-      dateString = newsData.createdAt.toDate().toLocaleDateString('th-TH');
+      dateString = newsData.createdAt.toDate().toLocaleDateString('th-TH', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
     }
   }
-
-  // ลิงก์สำหรับแชร์โซเชียล (อัปเดตระบบ LINE ให้แชร์ง่ายขึ้น)
-  const fbShare = `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`;
-  const xShare = `https://twitter.com/intent/tweet?url=${currentUrl}&text=${encodeURIComponent(newsData.title)}`;
-  const lineShare = `https://social-plugins.line.me/lineit/share?url=${currentUrl}`;
 
   return (
     <div className="pt-32 pb-24 bg-white min-h-screen font-sans text-slate-800">
@@ -126,44 +110,25 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
         <div className="w-full h-[300px] md:h-[500px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl border border-slate-100 group relative">
           <img 
             src={newsData.img || 'https://via.placeholder.com/800x600'} 
-            alt={newsData.altText || newsData.title} // 🌟 นำ Alt Text จาก Firebase มาแสดง (ถ้าไม่มีจะใช้ชื่อเรื่องแทน)
+            alt={newsData.altText || newsData.title} 
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
           />
         </div>
 
-        {/* 🌟 ปุ่มแชร์โซเชียล (Facebook, X, LINE) */}
-        <div className="flex flex-wrap items-center gap-4 mb-10 pb-10 border-b border-slate-100">
-           <span className="font-black text-slate-400 uppercase tracking-widest text-xs w-full md:w-auto mb-2 md:mb-0">แชร์บทความ:</span>
-           
-           {/* Facebook */}
-           <a href={fbShare} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-[#1877F2] hover:bg-[#1877F2]/90 rounded-2xl text-white transition-all shadow-lg shadow-blue-500/20 active:scale-95">
-             <Facebook className="w-4 h-4" /> <span className="text-sm font-bold">Facebook</span>
-           </a>
-           
-           {/* X (Twitter) */}
-           <a href={xShare} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-slate-800 rounded-2xl text-white transition-all shadow-lg active:scale-95">
-             <span className="font-black text-sm">𝕏</span> <span className="text-sm font-bold">Post</span>
-           </a>
-           
-           {/* LINE */}
-           <a href={lineShare} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-[#00B900] hover:bg-[#00B900]/90 rounded-2xl text-white transition-all shadow-lg shadow-green-500/20 active:scale-95">
-             <MessageCircle className="w-4 h-4" /> <span className="text-sm font-bold">LINE</span>
-           </a>
-        </div>
+        {/* 🌟 เรียกใช้ปุ่มแชร์ตัวใหม่ที่นี่ */}
+        <ShareButtons currentUrl={currentUrl} title={newsData.title} />
 
-        {/* แสดงเนื้อหาข่าวแบบ Rich Text HTML */}
         <div 
           className="prose prose-lg prose-orange max-w-none 
           prose-headings:font-black prose-headings:text-green-950 prose-headings:tracking-tight
           prose-h2:text-3xl prose-h3:text-2xl
           prose-p:text-slate-600 prose-p:leading-relaxed prose-p:mb-8 
           prose-a:text-orange-500 prose-a:font-bold prose-a:no-underline hover:prose-a:underline
-          prose-img:rounded-3xl prose-img:shadow-lg
+          prose-img:rounded-3xl prose-img:shadow-lg prose-img:w-full prose-img:my-8
           prose-strong:text-slate-800 prose-strong:font-black"
           dangerouslySetInnerHTML={{ __html: newsData.content || `<p>${newsData.excerpt}</p>` }}
         />
 
-        {/* Footer บทความ */}
         <div className="mt-20 pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-green-950 rounded-full flex items-center justify-center text-white font-black">SC</div>
