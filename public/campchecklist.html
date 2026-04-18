@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดกระเป๋าเข้าค่ายลูกเสือ 3 วัน 2 คืน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- นำเข้า html2canvas สำหรับแปลงหน้าเว็บเป็นรูปภาพ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f9fafb; /* Minimal light gray */
+            color: #374151; /* Gray-700 */
+        }
+        .checkbox-custom:checked + label {
+            color: #9ca3af; /* Gray-400 */
+            transition: all 0.3s ease;
+        }
+        /* ซ่อนขอบ input ตอน save รูปให้ดูเนียนตา */
+        .hide-border-on-save {
+            transition: border 0.3s;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col items-center justify-center min-h-screen">
+
+    <!-- Container หลักที่จะถูก Capture เป็นภาพ (เพิ่ม id="checklistCard") -->
+    <div id="checklistCard" class="w-full max-w-4xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300 rounded-3xl overflow-hidden border border-gray-100 flex flex-col">
+        
+        <!-- Header Section -->
+        <div class="p-6 md:p-8 text-center bg-white border-b border-gray-50">
+            <h1 class="text-2xl md:text-4xl font-bold mb-2 text-green-800">
+                จัดกระเป๋าเข้าค่ายลูกเสือ 3 วัน 2 คืน
+            </h1>
+            <p class="text-base md:text-lg font-light text-gray-500 mb-5">
+                ต้องพกอะไรไปบ้าง? (พร้อม Checklist ฉบับสมบูรณ์)
+            </p>
+            
+            <!-- ส่วนเพิ่มชื่อผู้ใช้งาน -->
+            <div class="flex justify-center items-center">
+                <span class="mr-3 font-semibold text-gray-700">ชื่อ-สกุล:</span>
+                <input type="text" id="camperName" placeholder="พิมพ์ชื่อน้องๆ ที่นี่..." class="hide-border-on-save text-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 w-full max-w-xs focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800 font-medium">
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-5 p-6 md:p-8 bg-white">
+            
+            <!-- Category 1: Clothing -->
+            <div class="rounded-2xl p-5 bg-gray-50/70 border border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="mr-2 text-xl">👕</span> หมวดเสื้อผ้า
+                </h2>
+                <div class="space-y-3 text-sm md:text-base">
+                    <div class="flex items-start">
+                        <input type="checkbox" id="item1" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-green-600 cursor-pointer rounded shrink-0">
+                        <label for="item1" class="cursor-pointer"><span>ชุดลูกเสือ (เครื่องแบบครบเซ็ต)</span></label>
+                    </div>
+                    <div class="flex items-start">
+                        <input type="checkbox" id="item2" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-green-600 cursor-pointer rounded shrink-0">
+                        <label for="item2" class="cursor-pointer flex flex-col">
+                            <span>ชุดลำลอง (4-5 ชุด)</span>
+                            <span class="text-xs text-gray-400 font-light mt-0.5">สีเข้ม, กางเกงสามส่วน/ขายาว</span>
+                        </label>
+                    </div>
+                    <div class="flex items-start">
+                        <input type="checkbox" id="item3" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-green-600 cursor-pointer rounded shrink-0">
+                        <label for="item3" class="cursor-pointer"><span>ชุดการแสดงรอบกองไฟ(ถ้ามี)</span></label>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Category 2: Personal & Medical -->
+            <div class="rounded-2xl p-5 bg-gray-50/70 border border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="mr-2 text-xl">🧼</span> ของใช้ส่วนตัว / แพทย์
+                </h2>
+                <div class="space-y-3 text-sm md:text-base">
+                    <div class="flex items-start">
+                        <input type="checkbox" id="item5" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-blue-600 cursor-pointer rounded shrink-0">
+                        <label for="item5" class="cursor-pointer"><span>อุปกรณ์อาบน้ำ (สบู่, แปรงสีฟัน, ฯลฯ)</span></label>
+                    </div>
+                  
+                    <div class="flex items-start">
+                        <input type="checkbox" id="item7" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-blue-600 cursor-pointer rounded shrink-0">
+                        <label for="item7" class="cursor-pointer"><span>ยารักษาโรคประจำตัว</span></label>
+                    </div>
+                    <div class="flex items-start">
+                        <input type="checkbox" id="item8" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-blue-600 cursor-pointer rounded shrink-0">
+                        <label for="item8" class="cursor-pointer"><span>ถุงพลาสติกสำหรับผ้าเปียก</span></label>
+                    </div>
+                    <div class="flex items-start">
+                        <input type="checkbox" id="item4a" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-blue-600 cursor-pointer rounded shrink-0">
+                        <label for="item4a" class="cursor-pointer"><span>รองเท้าแตะ</span></label>
+                    </div>
+                     <div class="flex items-start">
+                        <input type="checkbox" id="item4b" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-green-600 cursor-pointer rounded shrink-0">
+                        <label for="item4b" class="cursor-pointer"><span>ถุงนอน(ถ้ามี)</span></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 3: Activities & Others -->
+            <div class="rounded-2xl p-5 bg-gray-50/70 border border-gray-100 flex flex-col">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="mr-2 text-xl">🪢</span> กิจกรรม & อื่นๆ
+                </h2>
+                
+                <div class="space-y-3 text-sm md:text-base flex-grow">
+                    <div class="flex items-start">
+                        <input type="checkbox" id="item9" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-orange-600 cursor-pointer rounded shrink-0">
+                        <label for="item9" class="cursor-pointer"><span>เชือกสำหรับวิชาเงื่อน</span></label>
+                    </div>
+                   
+                    <div class="flex items-start">
+                        <input type="checkbox" id="item12" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-orange-600 cursor-pointer rounded shrink-0">
+                        <label for="item12" class="cursor-pointer text-green-700 font-medium"><span>ร่างกายและจิตใจที่พร้อม!</span></label>
+                    </div>
+
+                    <!-- Container สำหรับใส่สิ่งของที่เพิ่มเอง -->
+                    <div id="customItemsContainer" class="space-y-3 mt-3"></div>
+                </div>
+
+                <!-- ส่วนเพิ่มสิ่งของ (จะถูกซ่อนตอน Save รูปภาพ) -->
+                <div id="addCustomSection" class="mt-4 flex items-center border-t border-gray-200 pt-4">
+                    <input type="text" id="newItemInput" placeholder="เพิ่มของที่ต้องพก..." class="text-sm flex-grow bg-white border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                    <button onclick="addCustomItem()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-r-lg text-sm font-medium transition-colors">
+                        เพิ่ม
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Warning Section & Footer -->
+        <div class="bg-red-50 p-4 md:px-8 border-t border-red-100">
+            <div class="flex flex-col md:flex-row items-center justify-between text-center md:text-left text-sm md:text-base">
+                <div class="flex flex-col md:flex-row items-center text-red-600 mb-2 md:mb-0">
+                    <span class="font-semibold mr-0 md:mr-2 mb-1 md:mb-0">🚫 สิ่งของต้องห้าม:</span>
+                    <span class="font-light">สารเสพติด, ของมีคม, โทรศัพท์มือถือ</span>
+                </div>
+                <div class="text-gray-500 font-light text-sm">
+                    ค่ายลูกเสืออนุสรณ์ศุภมาศ
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ปุ่ม Save/Print Section (ไม่อยู่ในภาพที่ถูกเซฟ) -->
+    <div id="actionButtons" class="mt-8 text-center text-gray-400 text-xs md:text-sm flex flex-col items-center">
+        <button onclick="saveAsPNG()" id="saveBtn" class="bg-green-600 text-white px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:bg-green-700 transition-all font-semibold border border-green-500 mb-3 flex items-center justify-center text-base">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            บันทึกเป็นรูปภาพ (PNG)
+        </button>
+        <p>คุณสามารถเพิ่มสิ่งของ ระบุชื่อ ติ๊กเตรียมของ แล้วกดบันทึกเป็นรูปเก็บไว้ได้เลย</p>
+    </div>
+
+    <!-- สคริปต์การทำงาน -->
+    <script>
+        let customItemCount = 0;
+
+        // ฟังก์ชันเพิ่มสิ่งของลงใน Checklist
+        function addCustomItem() {
+            const input = document.getElementById('newItemInput');
+            const value = input.value.trim();
+            if (!value) return;
+
+            customItemCount++;
+            const itemId = `custom_item_${customItemCount}`;
+            const container = document.getElementById('customItemsContainer');
+
+            const div = document.createElement('div');
+            div.className = 'flex items-start';
+            div.innerHTML = `
+                <input type="checkbox" id="${itemId}" class="checkbox-custom mt-1 mr-3 w-5 h-5 accent-orange-600 cursor-pointer rounded shrink-0">
+                <label for="${itemId}" class="cursor-pointer break-words"><span>${value}</span></label>
+            `;
+
+            container.appendChild(div);
+            input.value = ''; // เคลียร์ช่องพิมพ์
+        }
+
+        // กด Enter เพื่อเพิ่มของได้
+        document.getElementById('newItemInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addCustomItem();
+            }
+        });
+
+        // ฟังก์ชันบันทึกภาพ
+        function saveAsPNG() {
+            const checklistCard = document.getElementById('checklistCard');
+            const addSection = document.getElementById('addCustomSection');
+            const nameInput = document.getElementById('camperName');
+            const saveBtn = document.getElementById('saveBtn');
+
+            // 1. เปลี่ยนข้อความปุ่มเพื่อบอกสถานะ
+            const originalBtnText = saveBtn.innerHTML;
+            saveBtn.innerHTML = 'กำลังประมวลผล...';
+            saveBtn.disabled = true;
+
+            // 2. ซ่อนช่อง "เพิ่มของ" ไม่ให้ติดไปในรูป
+            addSection.style.display = 'none';
+            
+            // แก้ปัญหา html2canvas render <input> ตัดขอบข้อความ (สระภาษาไทย)
+            // โดยการสร้าง <span> มาแสดงข้อความแทนช่อง input ชั่วคราว
+            const tempNameDisplay = document.createElement('span');
+            tempNameDisplay.id = 'tempNameDisplay';
+            // นำคลาสของ input มาใส่เพื่อให้ฟอนต์และการจัดวางเหมือนเดิมเป๊ะ
+            tempNameDisplay.className = 'text-center px-4 py-2 w-full max-w-xs text-gray-800 font-medium'; 
+            tempNameDisplay.innerText = nameInput.value || '';
+            nameInput.style.display = 'none'; // ซ่อน input จริง
+            nameInput.parentNode.insertBefore(tempNameDisplay, nameInput); // ใส่ข้อความจำลองลงไปแทน
+
+            // 3. ใช้ html2canvas ถ่ายภาพ
+            html2canvas(checklistCard, {
+                scale: 2, // เพิ่มความละเอียดภาพ (Retina)
+                windowWidth: 1024, // บังคับจำลองหน้าจอความกว้างระดับ Desktop เพื่อให้ Tailwind แสดงผลเป็น 3 คอลัมน์
+                backgroundColor: "#ffffff",
+                logging: false,
+                useCORS: true,
+                onclone: function(clonedDoc) {
+                    // จัดการ DOM ในเวอร์ชันที่ถูกโคลนไปถ่ายรูป (ไม่กระทบหน้าจอจริง)
+                    // บังคับความกว้างของการ์ดให้เป็นแนวนอนคงที่
+                    const clonedCard = clonedDoc.getElementById('checklistCard');
+                    clonedCard.style.width = '1000px';
+                    clonedCard.style.maxWidth = '1000px';
+                    clonedCard.style.margin = '0 auto';
+                }
+            }).then(canvas => {
+                // 4. นำภาพมาสร้างเป็นไฟล์ดาวน์โหลด
+                let fileName = nameInput.value.trim();
+                fileName = fileName ? `Checklist_${fileName}.png` : 'Scout_Checklist.png';
+
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                // 5. คืนค่า UI กลับเป็นเหมือนเดิม
+                addSection.style.display = 'flex';
+                
+                // ลบข้อความจำลองทิ้ง และนำ input กลับมาแสดง
+                const tempDisplay = document.getElementById('tempNameDisplay');
+                if (tempDisplay) tempDisplay.remove();
+                nameInput.style.display = '';
+                
+                saveBtn.innerHTML = originalBtnText;
+                saveBtn.disabled = false;
+            }).catch(err => {
+                console.error("Error creating image:", err);
+                alert("เกิดข้อผิดพลาดในการบันทึกภาพ กรุณาลองใหม่อีกครั้ง");
+                
+                // คืนค่า UI หาก error
+                addSection.style.display = 'flex';
+                
+                const tempDisplay = document.getElementById('tempNameDisplay');
+                if (tempDisplay) tempDisplay.remove();
+                nameInput.style.display = '';
+                
+                saveBtn.innerHTML = originalBtnText;
+                saveBtn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>

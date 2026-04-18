@@ -619,12 +619,12 @@ export default function AdminPage() {
     };
     
     const generateSlug = (text) => {
-      return text.toString().toLowerCase()
-        .replace(/\s+/g, '-') 
-        .replace(/[^\w\-\u0E00-\u0E7F]+/g, '') 
-        .replace(/\-\-+/g, '-') 
-        .replace(/^-+/, '').replace(/-+$/, ''); 
-    };
+    return text.toString().toLowerCase()
+    .replace(/\s+/g, '-')           // เปลี่ยนช่องว่างเป็นขีด
+    .replace(/[^\w\-]+/g, '')       // เก็บเฉพาะภาษาอังกฤษและตัวเลข (ลบภาษาไทยออกจาก URL)
+    .replace(/\-\-+/g, '-')         // ลบขีดซ้ำ
+    .replace(/^-+/, '').replace(/-+$/, '');
+};
 
     const handleSave = async (e) => {
       e.preventDefault();
@@ -644,23 +644,41 @@ export default function AdminPage() {
 
       const newsDataToSave = { ...formData, img: finalImageUrl, storagePath: finalStoragePath, updatedAt: serverTimestamp() };
 
-      try {
+try {
         if (editingId) {
+          // กรณีแก้ไขข่าวเดิม (ใช้ ID เดิม)
           await updateDoc(doc(db, "news", editingId), newsDataToSave);
           setNews(news.map(n => n.id === editingId ? { ...n, ...newsDataToSave } : n));
+          
         } else {
-          let slug = generateSlug(formData.title);
-          const checkDoc = await getDoc(doc(db, "news", slug));
+          // 🌟 กรณีสร้างข่าวใหม่ (อัปเกรดระบบ Slug ภาษาอังกฤษ)
+          
+          // 1. ถ้าครูกรอก slug มาให้ใช้ตัวนั้น ถ้าไม่กรอกให้ระบบสร้างให้จากชื่อ (เอาเฉพาะ Eng)
+          let customSlug = formData.slug ? formData.slug : generateShortSlug(formData.title);
+          
+          // 2. ป้องกันกรณีตั้งชื่อ "ภาษาไทยล้วน" แล้วระบบแปลงเป็น Eng ไม่ได้เลย (มันจะว่างเปล่า) ให้สุ่มรหัสสั้นๆ ให้แทน
+          if (!customSlug) {
+            customSlug = "news-" + Math.random().toString(36).substring(7); 
+          }
+
+          // 3. เช็คว่าชื่อลิงก์นี้ซ้ำกับข่าวอื่นในฐานข้อมูลไหม ถ้าซ้ำให้เติมตัวเลขต่อท้าย
+          const checkDoc = await getDoc(doc(db, "news", customSlug));
           if (checkDoc.exists()) {
-            slug = `${slug}-${Date.now().toString().slice(-4)}`;
+            customSlug = `${customSlug}-${Date.now().toString().slice(-4)}`;
           }
 
           newsDataToSave.createdAt = serverTimestamp();
-          await setDoc(doc(db, "news", slug), newsDataToSave);
-          setNews([{ id: slug, ...newsDataToSave }, ...news]);
+          
+          // 4. บันทึกโดยใช้ customSlug เป็น ID
+          await setDoc(doc(db, "news", customSlug), newsDataToSave);
+          setNews([{ id: customSlug, ...newsDataToSave }, ...news]);
         }
         setIsModalOpen(false);
-      } catch (error) { alert("บันทึกไม่สำเร็จ"); } finally { setIsUploading(false); }
+      } catch (error) { 
+        alert("บันทึกไม่สำเร็จ"); 
+      } finally { 
+        setIsUploading(false); 
+      }
     };
 
     const insertHTMLTag = (openTag, closeTag) => {
@@ -728,6 +746,16 @@ export default function AdminPage() {
                     <label className="block text-xs font-bold text-slate-700 uppercase mb-2">หัวข้อข่าว</label>
                     <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
                   </div>
+                  <div>
+  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">URL Slug (ลิงก์ภาษาอังกฤษ)</label>
+  <input 
+    type="text" 
+    placeholder="เช่น camp-3days (ถ้าไม่กรอก ระบบจะดึงจากหัวข้อข่าว)"
+    value={formData.slug || ''} 
+    onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})} 
+    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-orange-500" 
+  />
+</div>
                   <div className="w-full sm:w-1/3">
                     <label className="block text-xs font-bold text-slate-700 uppercase mb-2">หมวดหมู่</label>
                     <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold">
@@ -987,7 +1015,7 @@ export default function AdminPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
-    const initialForm = { title: '', price: '', unit: '/ ท่าน', subtitle: '', note: '', features: [''], isPopular: false, order: 1 };
+    const initialForm = { title: '',slug: '', price: '', unit: '/ ท่าน', subtitle: '', note: '', features: [''], isPopular: false, order: 1 };
     const [formData, setFormData] = useState(initialForm);
 
     useEffect(() => {
