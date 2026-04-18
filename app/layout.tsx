@@ -28,13 +28,35 @@ title: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // สร้าง JSON-LD สำหรับ Local Business
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี",
+    "url": "https://www.suppamascamp.me",
+    "logo": "https://www.suppamascamp.me/favicon.ico",
+    "sameAs": [
+      "https://www.facebook.com/camp.suppamas",
+      "https://www.tiktok.com/@a.s.camp"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+66-86-551-5110",
+      "contactType": "customer service",
+      "areaServed": "TH",
+      "availableLanguage": "Thai"
+    }
+  };
+
   return (
     <html lang="th" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+      </head>
       <body className="font-sans antialiased text-gray-800 bg-gray-50">
         <Navbar />
         <main className="min-h-screen">
