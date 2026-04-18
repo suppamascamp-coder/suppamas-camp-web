@@ -63,7 +63,7 @@ export default function NewsPage() {
             <p className="text-slate-500 font-bold text-lg md:text-xl">ความเคลื่อนไหวล่าสุด และความประทับใจจากค่ายศุภมาศ</p>
           </div>
           <div className="bg-green-100 text-green-800 px-8 py-4 rounded-[2rem] font-black italic border border-green-200 shadow-sm">
-             ⭐ ศูนย์ฝึกอบรมยอดนิยม อันดับ 1 ในราชบุรี
+             ⭐ ค่ายลูกเสือยอดนิยมในราชบุรี
           </div>
         </header>
 
@@ -130,7 +130,7 @@ export default function NewsPage() {
                  <Tag className="text-orange-500" /> Popular Tags
                </h3>
                <div className="flex flex-wrap gap-3">
-                 {['ค่ายลูกเสือราชบุรี', 'กิจกรรมผจญภัย', 'อาหารค่ายมาตรฐาน', 'ที่พักลูกเสือ', 'โรงเรียนอนุบาล', 'มัธยมศึกษา'].map((tag) => (
+                 {['ค่ายลูกเสือราชบุรี', 'ค่ายลูกเสือ', 'ค่ายลูกเสืออนุสรณ์ศุภมาศ', 'ที่พักลูกเสือ', 'กิจกรรมผจญภัย', 'มัธยมศึกษา'].map((tag) => (
                    <span key={tag} className="bg-white/5 hover:bg-orange-500 hover:text-white px-5 py-2.5 rounded-2xl text-[10px] font-black transition-all cursor-pointer border border-white/10 uppercase tracking-widest">
                      #{tag}
                    </span>
