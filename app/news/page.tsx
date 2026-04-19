@@ -2,11 +2,8 @@ import { Calendar, ArrowRight, Home as HomeIcon, ChevronRight, Tag, Clock } from
 import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
-
-// 📌 นำเข้า Firebase
-import { db } from '../../src/lib/firebase';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
-
+import Script from 'next/script';
+import { getLatestNews } from '../../src/lib/server/news';
 export const revalidate = 300;
 
 export const metadata: Metadata = {
@@ -30,9 +27,7 @@ export default async function NewsPage() {
   let newsList: any[] = [];
 
   try {
-    const q = query(collection(db, "news"), orderBy("createdAt", "desc"), limit(10));
-    const querySnapshot = await getDocs(q);
-    newsList = querySnapshot.docs.map((docItem) => ({ id: docItem.id, ...docItem.data() }));
+    newsList = await getLatestNews(10);
   } catch (error) {
     console.error("Error fetching news:", error);
   }
@@ -51,7 +46,24 @@ export default async function NewsPage() {
 
   return (
     <div className="pt-32 pb-24 bg-slate-50 min-h-screen">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(newsListSchema) }} />
+      <Script
+        id="news-webpage-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "ข่าวสารและกิจกรรม",
+            "url": "https://www.suppamascamp.me/news",
+            "description": "ติดตามข่าวสารและกิจกรรมล่าสุดจากค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี พร้อมภาพกิจกรรมจริงและบทความที่อัปเดตสม่ำเสมอ",
+          }),
+        }}
+      />
+      <Script
+        id="news-list-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(newsListSchema) }}
+      />
 
       <div className="max-w-7xl mx-auto px-4">
         

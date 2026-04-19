@@ -198,6 +198,18 @@ export default function Home() {
     <div className="relative font-sans antialiased text-slate-900 bg-white">
       <script
         type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "หน้าแรกค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี",
+            "url": "https://www.suppamascamp.me/",
+            "description": "ศูนย์ฝึกอบรมเยาวชนและค่ายลูกเสือมาตรฐาน พร้อมกิจกรรมเข้าค่ายครบวงจร",
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 

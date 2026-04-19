@@ -1,25 +1,25 @@
 import React from 'react';
-import { db } from '../../../src/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { ArrowLeft, Calendar, Eye } from 'lucide-react'; // 🌟 เพิ่ม Eye
 import Link from 'next/link';
 import { Metadata } from 'next';
 import Image from 'next/image';
+import Script from 'next/script';
 import ShareButtons from '../../../src/components/ShareButtons';
-import IncrementView from '../../../src/components/IncrementView'; // 🌟 นำเข้า IncrementView
+import { getNewsById, getNewsStaticParams } from '../../../src/lib/server/news';
 
 export const revalidate = 300;
+
+export async function generateStaticParams() {
+  return getNewsStaticParams(50);
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   try {
     const resolvedParams = await params;
     const id = decodeURIComponent(resolvedParams.id);
-    const docRef = doc(db, "news", id);
-    const docSnap = await getDoc(docRef);
+    const newsData = await getNewsById(id);
 
-    if (!docSnap.exists()) return { title: 'ไม่พบข่าวสาร | ค่ายอนุสรณ์ศุภมาศ ราชบุรี' };
-
-    const newsData = docSnap.data();
+    if (!newsData) return { title: 'ไม่พบข่าวสาร | ค่ายอนุสรณ์ศุภมาศ ราชบุรี' };
     const currentUrl = `https://www.suppamascamp.me/news/${resolvedParams.id}`;
     const coverImage = newsData.img || 'https://www.suppamascamp.me/og-image.jpg';
     const imageAltText = newsData.altText || newsData.title;
@@ -61,11 +61,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
   let newsData: any = null;
 
   try {
-    const docRef = doc(db, "news", id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      newsData = docSnap.data();
-    }
+    newsData = await getNewsById(id);
   } catch (error) {
     console.error("Error fetching news:", error);
   }
@@ -83,6 +79,34 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
 
   const encodedId = encodeURIComponent(id);
   const currentUrl = `https://www.suppamascamp.me/news/${encodedId}`;
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": newsData.title,
+    "description": newsData.excerpt || 'ข่าวสารกิจกรรมจากค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี',
+    "image": [newsData.img || 'https://www.suppamascamp.me/og-image.jpg'],
+    "datePublished": newsData.createdAt?.toDate
+      ? newsData.createdAt.toDate().toISOString()
+      : new Date().toISOString(),
+    "dateModified": newsData.updatedAt?.toDate
+      ? newsData.updatedAt.toDate().toISOString()
+      : newsData.createdAt?.toDate
+        ? newsData.createdAt.toDate().toISOString()
+        : new Date().toISOString(),
+    "mainEntityOfPage": currentUrl,
+    "author": {
+      "@type": "Organization",
+      "name": "ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี",
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.suppamascamp.me/favicon.ico",
+      },
+    },
+  };
 
   let dateString = 'อัปเดตล่าสุด';
   if (newsData.createdAt) {
@@ -99,10 +123,12 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="pt-32 pb-24 bg-white min-h-screen font-sans text-slate-800">
+      <Script
+        id="news-article-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       <div className="max-w-4xl mx-auto px-4">
-
-        {/* 🌟 เรียกใช้ระบบนับยอดวิวตรงนี้ */}
-        <IncrementView id={id} />
 
         <Link href="/news" className="inline-flex items-center gap-2 text-slate-400 hover:text-orange-500 font-bold mb-8 transition-colors bg-slate-50 px-4 py-2 rounded-full border border-slate-100 shadow-sm">
           <ArrowLeft className="w-4 h-4" /> ย้อนกลับ
