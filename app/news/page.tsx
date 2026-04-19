@@ -34,8 +34,8 @@ export default function NewsPage() {
   const newsListSchema = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    "name": "ข่าวสารและกิจกรรมล่าสุด ค่ายอนุสรณ์ศุภมาศ",
-    "description": "อัปเดตบรรยากาศการเข้าค่ายลูกเสือ กิจกรรมผจญภัย และข่าวสารสำคัญจากจังหวัดราชบุรี",
+    "name": "ข่าวสารและกิจกรรมล่าสุด ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี",
+    "description": "อัปเดตบรรยากาศการเข้าค่ายลูกเสือ กิจกรรมผจญภัย เรื่องน่ารู้เกี่ยวกับเข้าค่ายลูกเสือ และข่าวสารสำคัญจากจังหวัดราชบุรี",
     "publisher": {
       "@type": "EducationalOrganization",
       "name": "ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี",
@@ -69,7 +69,7 @@ export default function NewsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
-          <div className="lg:col-span-2 space-y-12">
+          <div className="lg:col-span-2 space-y-8">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[3rem] shadow-inner">
                 <Loader2 className="w-12 h-12 text-orange-500 animate-spin mb-4" />
@@ -81,19 +81,19 @@ export default function NewsPage() {
               </div>
             ) : (
               newsList.map((item) => (
-                <article key={item.id} className="group bg-white rounded-[3rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 border border-slate-100 flex flex-col md:flex-row">
-                  <div className="md:w-2/5 relative overflow-hidden h-72 md:h-auto">
+                <article key={item.id} className="group bg-white rounded-[2.25rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-100 flex flex-col md:flex-row">
+                  <div className="md:w-3/5 relative overflow-hidden h-60 md:h-auto">
                     <img 
                       src={item.img || 'https://via.placeholder.com/800x600'} 
                       alt={item.title} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
                     />
-                    <div className="absolute top-6 left-6 bg-orange-500 text-white px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
+                    <div className="absolute top-4 left-4 bg-orange-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
                       {item.category || 'กิจกรรม'}
                     </div>
                   </div>
-                  <div className="md:w-3/5 p-10 flex flex-col justify-between">
-                    <div className="space-y-4">
+                  <div className="md:w-1/2 p-7 md:p-8 flex flex-col justify-between">
+                    <div className="space-y-3.5">
                       <div className="flex items-center gap-4 text-slate-400 text-xs font-black uppercase tracking-widest">
                         <span className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
                            <Calendar className="w-3.5 h-3.5 text-orange-500" /> 
@@ -103,7 +103,7 @@ export default function NewsPage() {
                            <Clock className="w-3.5 h-3.5" /> Verified Update
                         </span>
                       </div>
-                      <h2 className="text-2xl md:text-3xl font-black text-slate-800 leading-tight group-hover:text-orange-500 transition-colors">
+                      <h2 className="text-xl md:text-2xl font-black text-slate-800 leading-tight group-hover:text-orange-500 transition-colors">
                         {item.title}
                       </h2>
                       <p className="text-slate-500 font-medium leading-relaxed line-clamp-3 italic">
@@ -111,7 +111,7 @@ export default function NewsPage() {
                         {item.excerpt || "คลิกอ่านรายละเอียดเพิ่มเติม..."}
                       </p>
                     </div>
-                    <div className="pt-8 border-t border-slate-50 flex justify-between items-center">
+                    <div className="pt-5 mt-4 border-t border-slate-50 flex justify-between items-center">
                        {/* 🌟 แก้ไข: เปลี่ยนจาก <button> เป็น <Link> เพื่อให้กดทะลุไปหน้าข่าวเต็มได้ */}
                        <Link href={`/news/${item.id}`} className="flex items-center gap-2 text-green-800 font-black uppercase text-xs tracking-[0.2em] group/btn">
                          อ่านเนื้อหาทั้งหมด <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-2 transition-transform" />
