@@ -4,8 +4,11 @@ import { doc, getDoc } from 'firebase/firestore';
 import { ArrowLeft, Calendar, Eye } from 'lucide-react'; // 🌟 เพิ่ม Eye
 import Link from 'next/link';
 import { Metadata } from 'next';
+import Image from 'next/image';
 import ShareButtons from '../../../src/components/ShareButtons';
 import IncrementView from '../../../src/components/IncrementView'; // 🌟 นำเข้า IncrementView
+
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   try {
@@ -23,10 +26,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     return {
       title: `${newsData.title} | ค่ายอนุสรณ์ศุภมาศ ราชบุรี`,
-      description: newsData.excerpt,
+      description: newsData.excerpt || 'ข่าวสารกิจกรรมจากค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี',
+      alternates: {
+        canonical: currentUrl,
+      },
       openGraph: {
         title: newsData.title,
-        description: newsData.excerpt,
+        description: newsData.excerpt || 'ข่าวสารกิจกรรมจากค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี',
         url: currentUrl,
         siteName: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ',
         images: [{ url: coverImage, width: 1200, height: 630, alt: imageAltText }],
@@ -37,7 +43,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         title: newsData.title,
         description: newsData.excerpt,
         images: [coverImage],
-      }
+      },
+      robots: {
+        index: true,
+        follow: true,
+      },
     };
   } catch (error) {
     return { title: 'ข่าวสารและกิจกรรม | ค่ายอนุสรณ์ศุภมาศ ราชบุรี' };
@@ -116,9 +126,12 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
         </h1>
 
         <div className="w-full h-[300px] md:h-[500px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl border border-slate-100 group relative">
-          <img
+          <Image
             src={newsData.img || 'https://via.placeholder.com/800x600'}
             alt={newsData.altText || newsData.title}
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 1200px"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
         </div>

@@ -17,7 +17,17 @@ export default function IncrementView({ id }: { id: string }) {
         // สั่งให้ Firebase บวกค่า views ขึ้น 1 อัตโนมัติ
         await updateDoc(docRef, { views: increment(1) });
       } catch (error) {
-        console.error("Error updating views", error);
+        const errorCode =
+          typeof error === 'object' && error !== null && 'code' in error
+            ? String((error as { code?: string }).code)
+            : '';
+
+        // ผู้ใช้ทั่วไปอาจไม่มีสิทธิ์เขียนตาม Firestore Rules ได้ จึงข้ามอย่างเงียบๆ
+        if (errorCode === 'permission-denied') return;
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error("Error updating views", error);
+        }
       }
     };
 

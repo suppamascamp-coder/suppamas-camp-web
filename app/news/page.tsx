@@ -1,35 +1,41 @@
-"use client";
-import React, { useState, useEffect } from 'react';
-import { Metadata } from 'next';
-import { Newspaper, Calendar, ArrowRight, Home as HomeIcon, ChevronRight, Tag, Clock, Loader2 } from 'lucide-react';
+import { Calendar, ArrowRight, Home as HomeIcon, ChevronRight, Tag, Clock } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Metadata } from 'next';
 
 // 📌 นำเข้า Firebase
 import { db } from '../../src/lib/firebase';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
-export default function NewsPage() {
-  const [newsList, setNewsList] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export const revalidate = 300;
 
-  useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const q = query(collection(db, "news"), orderBy("createdAt", "desc"), limit(10));
-        const querySnapshot = await getDocs(q);
-        const fetchedNews: any[] = [];
-        querySnapshot.forEach((doc) => {
-          fetchedNews.push({ id: doc.id, ...doc.data() });
-        });
-        setNewsList(fetchedNews);
-      } catch (error) {
-        console.error("Error fetching news:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchNews();
-  }, []);
+export const metadata: Metadata = {
+  title: 'ข่าวสารและกิจกรรม | ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี',
+  description:
+    'ติดตามข่าวสารและกิจกรรมล่าสุดจากค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี พร้อมภาพกิจกรรมจริงและบทความที่อัปเดตสม่ำเสมอ',
+  alternates: {
+    canonical: 'https://www.suppamascamp.me/news',
+  },
+  openGraph: {
+    title: 'ข่าวสารและกิจกรรม | ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี',
+    description:
+      'รวมข่าวสารและกิจกรรมล่าสุดของค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี',
+    url: 'https://www.suppamascamp.me/news',
+    siteName: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ',
+    type: 'website',
+  },
+};
+
+export default async function NewsPage() {
+  let newsList: any[] = [];
+
+  try {
+    const q = query(collection(db, "news"), orderBy("createdAt", "desc"), limit(10));
+    const querySnapshot = await getDocs(q);
+    newsList = querySnapshot.docs.map((docItem) => ({ id: docItem.id, ...docItem.data() }));
+  } catch (error) {
+    console.error("Error fetching news:", error);
+  }
 
   const newsListSchema = {
     "@context": "https://schema.org",
@@ -70,23 +76,20 @@ export default function NewsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           <div className="lg:col-span-2 space-y-8">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[3rem] shadow-inner">
-                <Loader2 className="w-12 h-12 text-orange-500 animate-spin mb-4" />
-                <p className="text-slate-400 font-bold animate-pulse">กำลังดึงข้อมูลกิจกรรมล่าสุด...</p>
-              </div>
-            ) : newsList.length === 0 ? (
+            {newsList.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
                 <p className="text-slate-400 font-bold">ยังไม่มีการลงข่าวสารในขณะนี้</p>
               </div>
             ) : (
               newsList.map((item) => (
                 <article key={item.id} className="group bg-white rounded-[2.25rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-100 flex flex-col md:flex-row">
-                  <div className="md:w-3/5 relative overflow-hidden h-60 md:h-auto">
-                    <img 
-                      src={item.img || 'https://via.placeholder.com/800x600'} 
-                      alt={item.title} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+                  <div className="md:w-1/2 relative overflow-hidden h-60 md:h-auto">
+                    <Image
+                      src={item.img || 'https://via.placeholder.com/800x600'}
+                      alt={item.altText || item.title || 'รูปภาพข่าวกิจกรรม'}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 50vw"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
                     <div className="absolute top-4 left-4 bg-orange-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
                       {item.category || 'กิจกรรม'}
