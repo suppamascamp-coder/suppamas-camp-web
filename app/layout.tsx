@@ -1,14 +1,13 @@
 import './globals.css';
 import Navbar from '../src/components/Navbar';
 import Footer from '../src/components/Footer';
+// 🌟 1. นำเข้า Script จาก next/script
+import Script from 'next/script';
 
 export const metadata = {
-  // ข้อมูลพื้นฐานสำหรับ Google Search
-title: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี | ศูนย์ฝึกอบรมและค่ายพักแรมมาตรฐาน',
+  title: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี | ศูนย์ฝึกอบรมและค่ายพักแรมมาตรฐาน',
   description: 'สถานที่จัดกิจกรรมอยู่ค่ายพักแรมลูกเสือ,เนตรนารี,ยุวกาชาด ที่ครบวงจรที่สุดในจังหวัดราชบุรี ตั้งอยู่ขอบเขตระหว่างจังหวัดราชบุรีและกาญจนบุรี ในราคามิตรภาพ พร้อมวิทยากรลูกเสือมืออาชีพของแทร่ กินอิ่ม นอนหลับ พักสบาย คลายอารมณ์ เสพสมชาวค่าย ',
   keywords: 'ค่ายลูกเสือ, ค่ายลูกเสือราชบุรี, ค่ายลูกเสืออนุสรณ์ศุภมาศ, เข้าค่ายพักแรม, ค่ายลูกเสือใกล้กรุงเทพ, ศูนย์ฝึกอบรมเยาวชน,ค่ายลูกเสือใกล้ฉัน',
-  
-  // 🌟 เพิ่มส่วน Open Graph สำหรับการแชร์ลง Facebook, LINE, Twitter 🌟
   openGraph: {
     title: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี',
     description: 'ศูนย์ฝึกอบรมเยาวชนและค่ายลูกเสือมาตรฐาน ที่หนึ่งในใจของคุณครูและนักเรียนทั่วประเทศ',
@@ -16,8 +15,7 @@ title: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ
     siteName: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ',
     images: [
       {
-        // 📌 ชื่อไฟล์รูปภาพที่คุณครูต้องนำไปใส่ในโฟลเดอร์ public
-        url: 'https://www.suppamascamp.me/og-image.jpg', 
+        url: 'https://www.suppamascamp.me/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี',
@@ -29,7 +27,6 @@ title: 'ค่ายลูกเสืออนุสรณ์ศุภมาศ
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // สร้าง JSON-LD สำหรับ Local Business
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
@@ -55,6 +52,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+
+        {/* 🌟 2. ติดตั้ง Google Analytics ด้วย next/script */}
+        <Script
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=G-4S09Y4YD9C`}
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-4S09Y4YD9C', {
+                page_path: window.location.pathname,
+              });
+            `,
+          }}
         />
       </head>
       <body className="font-sans antialiased text-gray-800 bg-gray-50">

@@ -1,10 +1,11 @@
 import React from 'react';
 import { db } from '../../../src/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar, Eye } from 'lucide-react'; // 🌟 เพิ่ม Eye
 import Link from 'next/link';
 import { Metadata } from 'next';
-import ShareButtons from '../../../src/components/ShareButtons'; // 🌟 นำเข้าปุ่มแชร์ใหม่
+import ShareButtons from '../../../src/components/ShareButtons';
+import IncrementView from '../../../src/components/IncrementView'; // 🌟 นำเข้า IncrementView
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   try {
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function NewsDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   const id = decodeURIComponent(resolvedParams.id);
-  
+
   let newsData: any = null;
 
   try {
@@ -72,7 +73,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
 
   const encodedId = encodeURIComponent(id);
   const currentUrl = `https://www.suppamascamp.me/news/${encodedId}`;
-  
+
   let dateString = 'อัปเดตล่าสุด';
   if (newsData.createdAt) {
     if (newsData.createdAt.seconds) {
@@ -89,17 +90,24 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
   return (
     <div className="pt-32 pb-24 bg-white min-h-screen font-sans text-slate-800">
       <div className="max-w-4xl mx-auto px-4">
-        
+
+        {/* 🌟 เรียกใช้ระบบนับยอดวิวตรงนี้ */}
+        <IncrementView id={id} />
+
         <Link href="/news" className="inline-flex items-center gap-2 text-slate-400 hover:text-orange-500 font-bold mb-8 transition-colors bg-slate-50 px-4 py-2 rounded-full border border-slate-100 shadow-sm">
           <ArrowLeft className="w-4 h-4" /> ย้อนกลับ
         </Link>
 
-        <div className="flex items-center gap-4 text-sm font-black uppercase tracking-widest mb-6">
+        <div className="flex flex-wrap items-center gap-4 text-sm font-black uppercase tracking-widest mb-6">
           <span className="bg-orange-500 text-white px-4 py-1.5 rounded-full shadow-md">
             {newsData.category || 'ข่าวสาร'}
           </span>
           <span className="text-slate-400 flex items-center gap-2">
             <Calendar className="w-4 h-4" /> {dateString}
+          </span>
+          {/* 🌟 แสดงยอดเข้าชมตรงนี้ */}
+          <span className="text-slate-400 flex items-center gap-2">
+            <Eye className="w-4 h-4" /> {newsData.views || 0} ครั้ง
           </span>
         </div>
 
@@ -108,17 +116,16 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
         </h1>
 
         <div className="w-full h-[300px] md:h-[500px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl border border-slate-100 group relative">
-          <img 
-            src={newsData.img || 'https://via.placeholder.com/800x600'} 
-            alt={newsData.altText || newsData.title} 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+          <img
+            src={newsData.img || 'https://via.placeholder.com/800x600'}
+            alt={newsData.altText || newsData.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
         </div>
 
-        {/* 🌟 เรียกใช้ปุ่มแชร์ตัวใหม่ที่นี่ */}
         <ShareButtons currentUrl={currentUrl} title={newsData.title} />
 
-        <div 
+        <div
           className="prose prose-lg prose-orange max-w-none 
           prose-headings:font-black prose-headings:text-green-950 prose-headings:tracking-tight
           prose-h2:text-3xl prose-h3:text-2xl
@@ -130,16 +137,16 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
         />
 
         <div className="mt-20 pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
-           <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-950 rounded-full flex items-center justify-center text-white font-black">SC</div>
-              <div>
-                 <p className="font-black text-slate-800">ทีมงานสื่อสารองค์กร</p>
-                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี</p>
-              </div>
-           </div>
-           <Link href="/news" className="bg-orange-500 text-white px-8 py-4 rounded-full font-black shadow-xl hover:bg-orange-600 transition-all active:scale-95">
-             อ่านข่าวอื่นๆ ต่อ
-           </Link>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-950 rounded-full flex items-center justify-center text-white font-black">SC</div>
+            <div>
+              <p className="font-black text-slate-800">ทีมงานสื่อสารองค์กร</p>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">ค่ายลูกเสืออนุสรณ์ศุภมาศ ราชบุรี</p>
+            </div>
+          </div>
+          <Link href="/news" className="bg-orange-500 text-white px-8 py-4 rounded-full font-black shadow-xl hover:bg-orange-600 transition-all active:scale-95">
+            อ่านข่าวอื่นๆ ต่อ
+          </Link>
         </div>
 
       </div>
