@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Script from 'next/script';
 import ShareButtons from '../../../src/components/ShareButtons';
 import { getNewsById, getNewsStaticParams } from '../../../src/lib/server/news';
+import { sanitizeNewsHtml } from '../../../src/lib/sanitizeNewsHtml';
 
 export const revalidate = 300;
 
@@ -49,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         follow: true,
       },
     };
-  } catch (error) {
+  } catch {
     return { title: 'ข่าวสารและกิจกรรม | ค่ายอนุสรณ์ศุภมาศ ราชบุรี' };
   }
 }
@@ -58,7 +59,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
   const resolvedParams = await params;
   const id = decodeURIComponent(resolvedParams.id);
 
-  let newsData: any = null;
+  let newsData: Awaited<ReturnType<typeof getNewsById>> = null;
 
   try {
     newsData = await getNewsById(id);
@@ -79,6 +80,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
 
   const encodedId = encodeURIComponent(id);
   const currentUrl = `https://www.suppamascamp.me/news/${encodedId}`;
+  const sanitizedContent = sanitizeNewsHtml(newsData.content || `<p>${newsData.excerpt || ''}</p>`);
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -172,7 +174,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
           prose-a:text-orange-500 prose-a:font-bold prose-a:no-underline hover:prose-a:underline
           prose-img:rounded-3xl prose-img:shadow-lg prose-img:w-full prose-img:my-8
           prose-strong:text-slate-800 prose-strong:font-black"
-          dangerouslySetInnerHTML={{ __html: newsData.content || `<p>${newsData.excerpt}</p>` }}
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
         />
 
         <div className="mt-20 pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
