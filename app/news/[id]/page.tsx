@@ -7,12 +7,11 @@ import Script from 'next/script';
 import ShareButtons from '../../../src/components/ShareButtons';
 import { getNewsById, getNewsStaticParams } from '../../../src/lib/server/news';
 import { sanitizeNewsHtml } from '../../../src/lib/sanitizeNewsHtml';
+import IncrementView from '../../../src/components/IncrementView';
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
-export const revalidate = 300;
 
-export async function generateStaticParams() {
-  return getNewsStaticParams(50);
-}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   try {
@@ -131,7 +130,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
       />
       <div className="max-w-4xl mx-auto px-4">
-
+        <IncrementView id={id} />
         <Link href="/news" className="inline-flex items-center gap-2 text-slate-400 hover:text-orange-500 font-bold mb-8 transition-colors bg-slate-50 px-4 py-2 rounded-full border border-slate-100 shadow-sm">
           <ArrowLeft className="w-4 h-4" /> ย้อนกลับ
         </Link>
@@ -156,7 +155,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
         <div className="w-full h-[300px] md:h-[500px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl border border-slate-100 group relative">
           <Image
             src={newsData.img || 'https://via.placeholder.com/800x600'}
-            alt={newsData.altText || newsData.title}
+            alt={newsData.altText || newsData.title || 'ภาพประกอบข่าว'}
             fill
             priority
             sizes="(max-width: 768px) 100vw, 1200px"
@@ -164,8 +163,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
           />
         </div>
 
-        <ShareButtons currentUrl={currentUrl} title={newsData.title} />
-
+<ShareButtons currentUrl={currentUrl} title={newsData.title || 'ข่าวสารจากค่ายอนุสรณ์ศุภมาศ'} />
         <div
           className="prose prose-lg prose-orange max-w-none 
           prose-headings:font-black prose-headings:text-green-950 prose-headings:tracking-tight
