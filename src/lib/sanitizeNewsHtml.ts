@@ -24,17 +24,19 @@ const SANITIZE_OPTIONS = {
 export function sanitizeNewsHtml(html: string): string {
   if (!html) return "";
 
-  const sanitized = DOMPurify.sanitize(html, SANITIZE_OPTIONS);
+  const sanitized = DOMPurify.sanitize(html, SANITIZE_OPTIONS as any);
 
-  // Ensure target=_blank links cannot access window.opener.
-  return sanitized.replace(
-    /<a([^>]*?)target="_blank"([^>]*?)>/gi,
-    (_fullMatch, beforeTarget, afterTarget) => {
+
+
+// Ensure target=_blank links cannot access window.opener.
+  return String(sanitized).replace(
+    /<a([^>]*)target="_blank"([^>]*)>/gi,
+    (_fullMatch: string, beforeTarget: string, afterTarget: string) => {
       const hasRel = /\brel\s*=/.test(`${beforeTarget}${afterTarget}`);
       if (hasRel) {
         return `<a${beforeTarget}target="_blank"${afterTarget}>`;
       }
       return `<a${beforeTarget}target="_blank" rel="noopener noreferrer"${afterTarget}>`;
-    },
+    }
   );
 }
