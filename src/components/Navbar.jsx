@@ -12,6 +12,7 @@ export default function Navbar() {
     { name: 'หน้าแรก', href: '/#home' },
     { name: 'รู้จักกับเรา', href: '/#about' },
     { name: 'บุคลากร', href: '/#staff' },
+    { name: 'วิทยากร', href: '/instructors' },
     { name: 'กิจกรรม', href: '/#activities' },
     { name: 'สิ่งอำนวยความสะดวก', href: '/#facilities' },
     { name: 'แพ็กเกจ', href: '/#packages' },

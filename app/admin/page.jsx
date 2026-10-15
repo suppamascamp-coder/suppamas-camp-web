@@ -9,47 +9,13 @@ import {
 } from 'lucide-react';
 
 import { db, storage, auth } from '../../src/lib/firebase';
+import InstructorsAdmin from '../../src/components/admin/InstructorsAdmin';
 import { sanitizeNewsHtml } from '../../src/lib/sanitizeNewsHtml';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getDoc, setDoc, doc, serverTimestamp, collection, query, orderBy, getDocs, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 
-// ============================================================================
-// 🗜️ ฟังก์ชันบีบอัดรูปภาพอัจฉริยะ (Image Compression Utility)
-// ============================================================================
-const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        
-        if (width > maxWidth) { 
-          height = Math.round((height * maxWidth) / width); 
-          width = maxWidth; 
-        }
-        
-        canvas.width = width; 
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob((blob) => {
-          if (!blob) return reject(new Error('Canvas empty'));
-          const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
-          resolve(new File([blob], newFileName, { type: 'image/jpeg', lastModified: Date.now() }));
-        }, 'image/jpeg', quality);
-      };
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
-  });
-};
+import { compressImage } from '../../src/lib/compressImage';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -63,6 +29,7 @@ export default function AdminPage() {
     { id: 'dashboard', label: 'แดชบอร์ด', icon: LayoutDashboard },
     { id: 'homepage', label: 'จัดการหน้าแรก', icon: Home },
     { id: 'news', label: 'จัดการข่าวสาร', icon: Newspaper },
+    { id: 'instructors', label: 'จัดการวิทยากร', icon: UserCheck },
     { id: 'activities', label: 'จัดการกิจกรรม', icon: Tent },
     { id: 'packages', label: 'จัดการแพ็กเกจ', icon: Package },
     { id: 'bookings', label: 'ปฏิทินการจอง', icon: CalendarDays },
@@ -1354,6 +1321,7 @@ try {
       case 'dashboard': return <DashboardView />;
       case 'homepage': return <HomepageView />;
       case 'news': return <NewsView />;
+      case 'instructors': return <InstructorsAdmin />;
       case 'gallery': return <GalleryView />;
       case 'activities': return <ActivitiesView />;
       case 'packages': return <PackagesView />;
