@@ -1,38 +1,12 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
-import { UserCheck, Loader2, Award, ArrowLeft, X, GraduationCap } from 'lucide-react';
-import { db } from '../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { UserCheck, Award, ArrowLeft, X, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
+import type { Cert, Instructor } from '../lib/server/instructors';
 
-type Cert = { url: string; title?: string };
-type Instructor = {
-  id: string;
-  name: string;
-  pos?: string;
-  group?: string;
-  img?: string;
-  certs?: Cert[];
-};
-
-export default function InstructorsClient() {
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function InstructorsClient({ instructors }: { instructors: Instructor[] }) {
   const [selected, setSelected] = useState<Instructor | null>(null);
   const [zoomed, setZoomed] = useState<Cert | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const snap = await getDoc(doc(db, 'settings', 'instructors'));
-        if (snap.exists()) setInstructors(snap.data().instructors || []);
-      } catch (error) {
-        console.error('Error fetching instructors:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, []);
 
   // ปิดหน้าต่างด้วยปุ่ม Esc (ปิดภาพขยายก่อน แล้วค่อยปิดหน้าต่างวุฒิบัตร) และล็อกการเลื่อนหน้าเบื้องหลัง
   useEffect(() => {
@@ -65,15 +39,6 @@ export default function InstructorsClient() {
   }, [instructors]);
 
   const closeAll = () => { setZoomed(null); setSelected(null); };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-orange-500 animate-spin mb-4" />
-        <p className="text-slate-500 font-bold uppercase tracking-widest text-sm animate-pulse">Loading Instructors...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-slate-50 min-h-screen font-sans text-slate-900 pb-24">
