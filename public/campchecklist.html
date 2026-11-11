@@ -194,6 +194,37 @@
             }
         });
 
+        // โหลดฟอนต์ Kanit ให้ครบทุกน้ำหนักก่อนถ่ายภาพ
+        // (html2canvas วาดตัวอักษรลง canvas ด้วยฟอนต์ที่โหลดเสร็จแล้วเท่านั้น ไม่เช่นนั้นจะตกไปใช้ฟอนต์สำรอง)
+        function loadKanit(doc) {
+            const sample = 'กขคงจ ก็ ที่ ฟ้า เป๋า ๆ ABCabc 0123 / & ( ) !';
+            return Promise.all([300, 400, 600, 700].map(w => doc.fonts.load(w + ' 16px Kanit', sample)));
+        }
+
+        // สีเช็กบ็อกซ์ตอนติ๊ก (ตรงกับ accent-*-600 ของ Tailwind)
+        const CHECK_COLORS = { green: '#16a34a', blue: '#2563eb', orange: '#ea580c' };
+
+        // html2canvas ไม่รองรับ accent-color จึงวาดเช็กบ็อกซ์เองในภาพที่โคลน ให้หน้าตาเหมือนบนเว็บ
+        function replaceCheckboxesForCapture(clonedDoc) {
+            clonedDoc.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                const key = (cb.className.match(/accent-([a-z]+)-600/) || [])[1];
+                const color = CHECK_COLORS[key] || CHECK_COLORS.green;
+                const box = clonedDoc.createElement('span');
+                box.style.cssText =
+                    'display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;' +
+                    'box-sizing:border-box;width:20px;height:20px;margin-top:4px;margin-right:12px;border-radius:4px;' +
+                    'border:1.5px solid ' + (cb.checked ? color : '#9ca3af') + ';' +
+                    'background:' + (cb.checked ? color : '#ffffff') + ';';
+                if (cb.checked) {
+                    box.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" ' +
+                        'stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
+                }
+                // วางไว้หน้า input เดิม (ซ่อนไว้ แต่ยังอยู่ใน DOM) เพื่อให้สไตล์ "ติ๊กแล้วตัวหนังสือจางลง" ยังทำงาน
+                cb.style.display = 'none';
+                cb.parentNode.insertBefore(box, cb);
+            });
+        }
+
         // ฟังก์ชันบันทึกภาพ
         function saveAsPNG() {
             const checklistCard = document.getElementById('checklistCard');
@@ -214,27 +245,36 @@
             const tempNameDisplay = document.createElement('span');
             tempNameDisplay.id = 'tempNameDisplay';
             // นำคลาสของ input มาใส่เพื่อให้ฟอนต์และการจัดวางเหมือนเดิมเป๊ะ
-            tempNameDisplay.className = 'text-center px-4 py-2 w-full max-w-xs text-gray-800 font-medium'; 
-            tempNameDisplay.innerText = nameInput.value || '';
+            tempNameDisplay.className = 'text-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 w-full max-w-xs text-gray-800 font-medium';
+            tempNameDisplay.style.display = 'block';
+            tempNameDisplay.style.minHeight = '42px';
+            // html2canvas วาดตัวอักษรไทยต่ำกว่าตำแหน่งจริงเล็กน้อย จึงชดเชยด้วย padding เพื่อให้ชื่ออยู่กึ่งกลางช่อง
+            tempNameDisplay.style.paddingTop = '3px';
+            tempNameDisplay.style.paddingBottom = '13px';
+            tempNameDisplay.innerText = nameInput.value.trim() || String.fromCharCode(160); // ไม่ได้ใส่ชื่อ = เว้นช่องว่างไว้ (nbsp)
             nameInput.style.display = 'none'; // ซ่อน input จริง
             nameInput.parentNode.insertBefore(tempNameDisplay, nameInput); // ใส่ข้อความจำลองลงไปแทน
 
             // 3. ใช้ html2canvas ถ่ายภาพ
-            html2canvas(checklistCard, {
+            loadKanit(document).catch(() => {}).then(() => html2canvas(checklistCard, {
                 scale: 2, // เพิ่มความละเอียดภาพ (Retina)
                 windowWidth: 1024, // บังคับจำลองหน้าจอความกว้างระดับ Desktop เพื่อให้ Tailwind แสดงผลเป็น 3 คอลัมน์
                 backgroundColor: "#ffffff",
                 logging: false,
                 useCORS: true,
-                onclone: function(clonedDoc) {
+                onclone: async function(clonedDoc) {
                     // จัดการ DOM ในเวอร์ชันที่ถูกโคลนไปถ่ายรูป (ไม่กระทบหน้าจอจริง)
                     // บังคับความกว้างของการ์ดให้เป็นแนวนอนคงที่
                     const clonedCard = clonedDoc.getElementById('checklistCard');
                     clonedCard.style.width = '1000px';
                     clonedCard.style.maxWidth = '1000px';
                     clonedCard.style.margin = '0 auto';
+
+                    // ให้ฟอนต์ในภาพโคลนโหลดครบก่อนวัดตำแหน่งตัวอักษร
+                    await loadKanit(clonedDoc).catch(() => {});
+                    replaceCheckboxesForCapture(clonedDoc);
                 }
-            }).then(canvas => {
+            })).then(canvas => {
                 // 4. นำภาพมาสร้างเป็นไฟล์ดาวน์โหลด
                 let fileName = nameInput.value.trim();
                 fileName = fileName ? `Checklist_${fileName}.png` : 'Scout_Checklist.png';
