@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import ActivityCard from '../../src/components/ActivityCard'; 
 import GoogleReviews from '../../src/components/GoogleReviews'; 
-import AdventureMapModal from '../../src/components/AdventureMapModal'; 
+import AdventureMapModal from '../../src/components/AdventureMapModal';
+import SafeFromHarmSection from './SafeFromHarmSection';
 
 // 📌 นำเข้า Firebase เพื่อดึงข้อมูลเพิ่มเติมในฝั่ง Client
 import { db } from '../../src/lib/firebase';
@@ -596,6 +597,9 @@ export default function HomePageClient({ initialHomepageData, initialGalleryImag
           </div>
         </div>
       </section>
+
+      {/* 10.1 Safe from Harm Section (ต่อจาก Get in Touch) */}
+      <SafeFromHarmSection />
 
       {/* 11. Google Reviews Section */}
       <GoogleReviews />
