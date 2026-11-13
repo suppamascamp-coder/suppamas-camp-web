@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { UserCheck, Award, ArrowLeft, X, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import type { Cert, Instructor } from '../lib/server/instructors';
+import SafeFromHarmSection from './SafeFromHarmSection';
 
 export default function InstructorsClient({ instructors }: { instructors: Instructor[] }) {
   const [selected, setSelected] = useState<Instructor | null>(null);
@@ -110,13 +111,18 @@ export default function InstructorsClient({ instructors }: { instructors: Instru
             </div>
           </div>
         ))}
-
-        <div className="text-center pt-6">
-          <Link href="/#home" className="inline-flex items-center gap-3 text-slate-500 hover:text-orange-500 font-bold text-sm bg-white px-8 py-4 rounded-full shadow-sm hover:shadow-xl transition-all border border-slate-200 group">
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> กลับสู่หน้าหลัก
-          </Link>
-        </div>
       </section>
+
+      {/* มาตรฐานความปลอดภัย Safe from Harm */}
+      <div className="mt-16">
+        <SafeFromHarmSection />
+      </div>
+
+      <div className="text-center mt-16 px-4">
+        <Link href="/#home" className="inline-flex items-center gap-3 text-slate-500 hover:text-orange-500 font-bold text-sm bg-white px-8 py-4 rounded-full shadow-sm hover:shadow-xl transition-all border border-slate-200 group">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> กลับสู่หน้าหลัก
+        </Link>
+      </div>
 
       {/* 3. หน้าต่างแสดงวุฒิบัตร */}
       {selected && (
